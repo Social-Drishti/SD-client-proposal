@@ -14,7 +14,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   const showHeader =
     theme.showHeader ?? theme.showHeaderLogo ?? theme.showLogoOnPages ?? true;
-  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/SD_LOGO.png";
+  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/black-sd-logo.png";
 
   // Custom header text or fallback
   const headerLeftText =
@@ -50,7 +50,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   // Fallback to default brand logo if custom URL fails to load
-                  (e.target as HTMLImageElement).src = "/SD_LOGO.png";
+                  (e.target as HTMLImageElement).src = "/black-sd-logo.png";
                 }}
               />
             ) : null}

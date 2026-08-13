@@ -23,7 +23,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const clientName = data?.clientName || client.name;
   const clientRole = data?.clientRole || client.role;
   const dateText = data?.dateText || "2026";
-  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/";
+  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/black-sd-logo.png";
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-white select-none p-12">
@@ -39,7 +39,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               className="h-20 sm:h-24 max-h-28 max-w-[540px] w-auto object-contain filter drop-shadow-xs"
               referrerPolicy="no-referrer"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = "/SD_LOGO.png";
+                (e.target as HTMLImageElement).src = "/black-sd-logo.png";
               }}
             />
           ) : (

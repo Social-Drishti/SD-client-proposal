@@ -8,8 +8,8 @@ export const socialDrishtiProposal: Proposal = {
   agency: {
     name: "SOCIAL DRISHTI",
     tagline: "LOOKING BEYOND THE OBVIOUS",
-    logoUrl: "/black-sd-logo",
-    footerLogoUrl: "/black-sd-logo",
+    logoUrl: "/black-sd-logo.png",
+    footerLogoUrl: "/SD_LOGO.png",
     email: "info@socialdrishti.com",
     phone: "+91 98765 43210",
     website: "www.socialdrishti.com",

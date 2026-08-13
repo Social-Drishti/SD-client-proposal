@@ -18,7 +18,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
   if (!showFooter) return null;
 
   const footerLogoUrl =
-    theme.footerLogoUrl || agency.footerLogoUrl || "/black-black-sd-logo";
+    theme.footerLogoUrl || agency.footerLogoUrl || "/SD_LOGO.png";
   const [logoSrc, setLogoSrc] = React.useState(footerLogoUrl);
 
   return (
@@ -31,7 +31,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
             alt="Footer Logo"
             className="h-8 max-w-[140px] object-contain"
             referrerPolicy="no-referrer"
-            onError={() => setLogoSrc("/social_drishti_footer_logo.png")}
+            onError={() => setLogoSrc("/SD_LOGO.png")}
           />
         </div>
       ) : null}
