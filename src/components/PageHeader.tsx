@@ -1,5 +1,5 @@
-import React from 'react';
-import { ProposalAgency, ProposalTheme } from '../types';
+import React from "react";
+import { ProposalAgency, ProposalTheme } from "../types";
 
 interface PageHeaderProps {
   pageTitle: string;
@@ -7,13 +7,24 @@ interface PageHeaderProps {
   theme: ProposalTheme;
 }
 
-export const PageHeader: React.FC<PageHeaderProps> = ({ pageTitle, agency, theme }) => {
-  const showHeader = theme.showHeader ?? theme.showHeaderLogo ?? theme.showLogoOnPages ?? true;
-  const logoUrl = theme.headerLogoUrl || agency.logoUrl || '/social_drishti_logo.jpg';
-  
+export const PageHeader: React.FC<PageHeaderProps> = ({
+  pageTitle,
+  agency,
+  theme,
+}) => {
+  const showHeader =
+    theme.showHeader ?? theme.showHeaderLogo ?? theme.showLogoOnPages ?? true;
+  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/SD_LOGO.png";
+
   // Custom header text or fallback
-  const headerLeftText = theme.customHeaderLeftText !== undefined ? theme.customHeaderLeftText : agency.name;
-  const headerRightText = theme.customHeaderRightText !== undefined ? theme.customHeaderRightText : (agency.website || '');
+  const headerLeftText =
+    theme.customHeaderLeftText !== undefined
+      ? theme.customHeaderLeftText
+      : agency.name;
+  const headerRightText =
+    theme.customHeaderRightText !== undefined
+      ? theme.customHeaderRightText
+      : agency.website || "";
 
   return (
     <div className="mb-6">
@@ -39,7 +50,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ pageTitle, agency, theme
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   // Fallback to default brand logo if custom URL fails to load
-                  (e.target as HTMLImageElement).src = '/social_drishti_logo.jpg';
+                  (e.target as HTMLImageElement).src = "/SD_LOGO.png";
                 }}
               />
             ) : null}

@@ -1,5 +1,10 @@
-import React from 'react';
-import { ProposalAgency, ProposalClient, CoverPageData, ProposalTheme } from '../types';
+import React from "react";
+import {
+  ProposalAgency,
+  ProposalClient,
+  CoverPageData,
+  ProposalTheme,
+} from "../types";
 
 interface CoverPageProps {
   agency: ProposalAgency;
@@ -8,19 +13,23 @@ interface CoverPageProps {
   theme: ProposalTheme;
 }
 
-export const CoverPage: React.FC<CoverPageProps> = ({ agency, client, data, theme }) => {
-  const mainTitle = data?.mainTitle || 'Client Proposal';
+export const CoverPage: React.FC<CoverPageProps> = ({
+  agency,
+  client,
+  data,
+  theme,
+}) => {
+  const mainTitle = data?.mainTitle || "Client Proposal";
   const clientName = data?.clientName || client.name;
   const clientRole = data?.clientRole || client.role;
-  const dateText = data?.dateText || '2026';
-  const logoUrl = theme.headerLogoUrl || agency.logoUrl || '/social_drishti_logo.jpg';
+  const dateText = data?.dateText || "2026";
+  const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/";
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-white select-none p-12">
       {/* Top Section: Centered Big Header Logo + Date Tag */}
       <div className="relative z-10 flex items-center justify-between pb-4 border-b border-slate-100 min-h-[60px]">
         <div className="w-24" /> {/* Spacer to balance layout */}
-
         {/* Centered Big Logo */}
         <div className="flex-[3] flex justify-center items-center px-4">
           {logoUrl ? (
@@ -30,7 +39,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({ agency, client, data, them
               className="h-20 sm:h-24 max-h-28 max-w-[540px] w-auto object-contain filter drop-shadow-xs"
               referrerPolicy="no-referrer"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/social_drishti_logo.jpg';
+                (e.target as HTMLImageElement).src = "/SD_LOGO.png";
               }}
             />
           ) : (
@@ -39,7 +48,6 @@ export const CoverPage: React.FC<CoverPageProps> = ({ agency, client, data, them
             </span>
           )}
         </div>
-
         {/* Date Tag */}
         <div className="w-24 text-right">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -94,12 +102,16 @@ export const CoverPage: React.FC<CoverPageProps> = ({ agency, client, data, them
           </p>
           <p className="text-sm font-extrabold text-slate-900">{agency.name}</p>
           {agency.tagline && (
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">{agency.tagline}</p>
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">
+              {agency.tagline}
+            </p>
           )}
         </div>
 
         <div className="text-right">
-          <p className="text-xs font-semibold text-slate-500">{agency.website || agency.email}</p>
+          <p className="text-xs font-semibold text-slate-500">
+            {agency.website || agency.email}
+          </p>
           {agency.phone && (
             <p className="text-xs text-slate-400 mt-0.5">{agency.phone}</p>
           )}

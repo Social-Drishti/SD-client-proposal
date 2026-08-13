@@ -14,7 +14,11 @@ export function App() {
     try {
       const saved = localStorage.getItem('proposa_proposals_v1');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+        console.error('Saved proposals is not an array');
       }
     } catch (e) {
       console.error('Failed to parse saved proposals', e);
