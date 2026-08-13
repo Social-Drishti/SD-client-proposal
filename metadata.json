@@ -1,0 +1,6 @@
+{
+  "name": "Client Proposal Builder",
+  "description": "Create, edit, and export professional multi-page client proposals with customizable templates and instant PDF generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

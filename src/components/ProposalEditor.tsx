@@ -1,0 +1,1016 @@
+import React, { useState } from 'react';
+import { Proposal, ProposalPage, PageType, CategoryTableRow, PricingNote } from '../types';
+import { ThemeSelector } from './ThemeSelector';
+import {
+  Layers,
+  FileText,
+  UserCheck,
+  Palette,
+  Plus,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  Copy,
+  DollarSign,
+  Briefcase,
+  Upload,
+  Image
+} from 'lucide-react';
+
+interface ProposalEditorProps {
+  proposal: Proposal;
+  activePageIndex: number;
+  onSelectPage: (index: number) => void;
+  onUpdateProposal: (updated: Proposal) => void;
+}
+
+export const ProposalEditor: React.FC<ProposalEditorProps> = ({
+  proposal,
+  activePageIndex,
+  onSelectPage,
+  onUpdateProposal
+}) => {
+  const [activeTab, setActiveTab] = useState<'content' | 'pages' | 'branding' | 'design'>('content');
+
+  const activePage: ProposalPage | undefined = proposal.pages[activePageIndex] || proposal.pages[0];
+
+  // Helper to update active page
+  const updateActivePage = (updatedPage: ProposalPage) => {
+    const updatedPages = [...proposal.pages];
+    updatedPages[activePageIndex] = updatedPage;
+    onUpdateProposal({
+      ...proposal,
+      pages: updatedPages,
+      updatedAt: new Date().toISOString()
+    });
+  };
+
+  // Helper to add new page
+  const handleAddPage = (type: PageType) => {
+    let newPage: ProposalPage = {
+      id: `page-${Date.now()}`,
+      pageTitle: 'New Section',
+      type
+    };
+
+    if (type === 'cover') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Cover Page',
+        coverData: {
+          mainTitle: 'Client Proposal Title',
+          subtitle: 'Prepared Exclusively For',
+          clientName: proposal.client.name,
+          clientRole: proposal.client.role,
+          dateText: 'August 2026',
+          showOverlayImage: true,
+          bgImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200'
+        }
+      };
+    } else if (type === 'category-table') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Services & Scope',
+        tableData: {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+            { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
+          ]
+        }
+      };
+    } else if (type === 'pricing-highlight') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Investment & Terms',
+        pricingData: {
+          highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+          highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+          notesHeader: 'Note',
+          notes: [
+            { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+          ]
+        }
+      };
+    } else if (type === 'deliverables-grid') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Core Features',
+        deliverablesData: {
+          sectionTitle: 'Core Features',
+          items: [
+            { id: 'd1', title: 'Feature 1', description: 'Feature details and deliverables.', badge: 'Included' },
+            { id: 'd2', title: 'Feature 2', description: 'Feature details and deliverables.', badge: 'Premium' }
+          ]
+        }
+      };
+    } else if (type === 'terms-signature') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Terms & Acceptance',
+        termsData: {
+          legalTerms: 'This proposal represents the entire agreement between parties.',
+          paymentTerms: 'Payment due 15 days from invoice date.',
+          validUntil: '30 Days',
+          agencySignatoryName: proposal.agency.name,
+          agencySignatoryTitle: 'Authorized Representative',
+          clientSignatoryName: proposal.client.name,
+          clientSignatoryTitle: proposal.client.role
+        }
+      };
+    } else {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Executive Summary',
+        freeformData: {
+          heading: 'Executive Summary',
+          content: 'Add your custom proposal narrative here.'
+        }
+      };
+    }
+
+    const updatedPages = [...proposal.pages, newPage];
+    onUpdateProposal({ ...proposal, pages: updatedPages });
+    onSelectPage(updatedPages.length - 1);
+  };
+
+  // Reorder pages
+  const movePage = (index: number, direction: 'up' | 'down') => {
+    if (
+      (direction === 'up' && index === 0) ||
+      (direction === 'down' && index === proposal.pages.length - 1)
+    ) {
+      return;
+    }
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const updatedPages = [...proposal.pages];
+    const temp = updatedPages[index];
+    updatedPages[index] = updatedPages[targetIndex];
+    updatedPages[targetIndex] = temp;
+
+    onUpdateProposal({ ...proposal, pages: updatedPages });
+    onSelectPage(targetIndex);
+  };
+
+  const duplicatePage = (index: number) => {
+    const pageToDup = proposal.pages[index];
+    const newPage: ProposalPage = {
+      ...JSON.parse(JSON.stringify(pageToDup)),
+      id: `page-${Date.now()}`,
+      pageTitle: `${pageToDup.pageTitle} (Copy)`
+    };
+
+    const updatedPages = [...proposal.pages];
+    updatedPages.splice(index + 1, 0, newPage);
+    onUpdateProposal({ ...proposal, pages: updatedPages });
+    onSelectPage(index + 1);
+  };
+
+  const deletePage = (index: number) => {
+    if (proposal.pages.length <= 1) return;
+    const updatedPages = proposal.pages.filter((_, idx) => idx !== index);
+    onUpdateProposal({ ...proposal, pages: updatedPages });
+    onSelectPage(Math.max(0, index - 1));
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col bg-white border-r border-slate-200 text-slate-900">
+      {/* Top Tab Bar */}
+      <div className="flex items-center border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('content')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'content'
+              ? 'bg-white text-slate-900 border border-slate-200 shadow-xs font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          Content
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('pages')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'pages'
+              ? 'bg-white text-slate-900 border border-slate-200 shadow-xs font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          Pages ({proposal.pages.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('branding')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'branding'
+              ? 'bg-white text-slate-900 border border-slate-200 shadow-xs font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <UserCheck className="w-3.5 h-3.5" />
+          Client
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('design')}
+          className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'design'
+              ? 'bg-white text-slate-900 border border-slate-200 shadow-xs font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Palette className="w-3.5 h-3.5" />
+          Theme
+        </button>
+      </div>
+
+      {/* Main Tab Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* TAB 1: CONTENT EDITOR */}
+        {activeTab === 'content' && activePage && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Active Page {activePageIndex + 1}
+                </span>
+                <input
+                  type="text"
+                  value={activePage.pageTitle}
+                  onChange={(e) =>
+                    updateActivePage({ ...activePage, pageTitle: e.target.value })
+                  }
+                  className="block w-full bg-transparent text-sm font-bold text-slate-900 focus:outline-none focus:border-b border-black"
+                />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-700 uppercase tracking-wider">
+                {activePage.type}
+              </span>
+            </div>
+
+            {/* COVER PAGE FORM */}
+            {activePage.type === 'cover' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Main Proposal Title
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={activePage.coverData?.mainTitle || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        coverData: {
+                          ...activePage.coverData!,
+                          mainTitle: e.target.value
+                        }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Client Name
+                    </label>
+                    <input
+                      type="text"
+                      value={activePage.coverData?.clientName || ''}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          coverData: {
+                            ...activePage.coverData!,
+                            clientName: e.target.value
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Client Role / Designation
+                    </label>
+                    <input
+                      type="text"
+                      value={activePage.coverData?.clientRole || ''}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          coverData: {
+                            ...activePage.coverData!,
+                            clientRole: e.target.value
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Background Photo Image URL
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.coverData?.bgImageUrl || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        coverData: {
+                          ...activePage.coverData!,
+                          bgImageUrl: e.target.value
+                        }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* CATEGORY TABLE FORM */}
+            {activePage.type === 'category-table' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Left Column Title
+                    </label>
+                    <input
+                      type="text"
+                      value={activePage.tableData?.categoryTitle || 'CATEGORY'}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          tableData: {
+                            ...activePage.tableData!,
+                            categoryTitle: e.target.value
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Right Column Title
+                    </label>
+                    <input
+                      type="text"
+                      value={activePage.tableData?.detailsTitle || 'DETAILS'}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          tableData: {
+                            ...activePage.tableData!,
+                            detailsTitle: e.target.value
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Rows Editor */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                      Table Rows ({activePage.tableData?.rows.length || 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentRows = activePage.tableData?.rows || [];
+                        const newRow: CategoryTableRow = {
+                          id: `r-${Date.now()}`,
+                          category: 'New Category',
+                          details: '• Item description\n• Details line 2'
+                        };
+                        updateActivePage({
+                          ...activePage,
+                          tableData: {
+                            ...activePage.tableData!,
+                            rows: [...currentRows, newRow]
+                          }
+                        });
+                      }}
+                      className="py-1 px-2.5 bg-black hover:bg-slate-800 text-white rounded-md text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Row
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {activePage.tableData?.rows.map((row, rIdx) => (
+                      <div
+                        key={row.id}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Category Name"
+                            value={row.category}
+                            onChange={(e) => {
+                              const updatedRows = [...activePage.tableData!.rows];
+                              updatedRows[rIdx].category = e.target.value;
+                              updateActivePage({
+                                ...activePage,
+                                tableData: { ...activePage.tableData!, rows: updatedRows }
+                              });
+                            }}
+                            className="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedRows = activePage.tableData!.rows.filter(
+                                (_, idx) => idx !== rIdx
+                              );
+                              updateActivePage({
+                                ...activePage,
+                                tableData: { ...activePage.tableData!, rows: updatedRows }
+                              });
+                            }}
+                            className="text-slate-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={3}
+                          placeholder="Details (Use bullet points starting with • or newlines)"
+                          value={row.details}
+                          onChange={(e) => {
+                            const updatedRows = [...activePage.tableData!.rows];
+                            updatedRows[rIdx].details = e.target.value;
+                            updateActivePage({
+                              ...activePage,
+                              tableData: { ...activePage.tableData!, rows: updatedRows }
+                            });
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PRICING HIGHLIGHT FORM */}
+            {activePage.type === 'pricing-highlight' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Highlighted Commercial Box Title
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.pricingData?.highlightBoxTitle || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        pricingData: {
+                          ...activePage.pricingData!,
+                          highlightBoxTitle: e.target.value
+                        }
+                      })
+                    }
+                    placeholder="Monthly – $2,500 + Taxes"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Highlight Box Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.pricingData?.highlightBoxSubtitle || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        pricingData: {
+                          ...activePage.pricingData!,
+                          highlightBoxSubtitle: e.target.value
+                        }
+                      })
+                    }
+                    placeholder="(Minimum Lock-in Period 6 Months)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                {/* Notes List */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                      Proposal Notes & Terms ({activePage.pricingData?.notes.length || 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentNotes = activePage.pricingData?.notes || [];
+                        const newNote: PricingNote = {
+                          id: `n-${Date.now()}`,
+                          title: 'Extra Service',
+                          description: 'Scope conditions and approval terms.'
+                        };
+                        updateActivePage({
+                          ...activePage,
+                          pricingData: {
+                            ...activePage.pricingData!,
+                            notes: [...currentNotes, newNote]
+                          }
+                        });
+                      }}
+                      className="py-1 px-2.5 bg-black hover:bg-slate-800 text-white rounded-md text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Note
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {activePage.pricingData?.notes.map((note, nIdx) => (
+                      <div
+                        key={note.id}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            value={note.title}
+                            onChange={(e) => {
+                              const updatedNotes = [...activePage.pricingData!.notes];
+                              updatedNotes[nIdx].title = e.target.value;
+                              updateActivePage({
+                                ...activePage,
+                                pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                              });
+                            }}
+                            className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedNotes = activePage.pricingData!.notes.filter(
+                                (_, idx) => idx !== nIdx
+                              );
+                              updateActivePage({
+                                ...activePage,
+                                pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                              });
+                            }}
+                            className="text-slate-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={2}
+                          value={note.description}
+                          onChange={(e) => {
+                            const updatedNotes = [...activePage.pricingData!.notes];
+                            updatedNotes[nIdx].description = e.target.value;
+                            updateActivePage({
+                              ...activePage,
+                              pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                            });
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* FREEFORM TEXT FORM */}
+            {activePage.type === 'freeform' && (
+              <div>
+                <label className="text-xs font-semibold text-slate-500 block mb-1">
+                  Custom Page Content
+                </label>
+                <textarea
+                  rows={12}
+                  value={activePage.freeformData?.content || ''}
+                  onChange={(e) =>
+                    updateActivePage({
+                      ...activePage,
+                      freeformData: {
+                        heading: activePage.freeformData?.heading || 'Executive Summary',
+                        content: e.target.value
+                      }
+                    })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none font-mono"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: PAGES MANAGER */}
+        {activeTab === 'pages' && (
+          <div className="space-y-4">
+            <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+              Proposal Structure
+            </h4>
+
+            <div className="space-y-2">
+              {proposal.pages.map((p, idx) => {
+                const isSelected = idx === activePageIndex;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => onSelectPage(idx)}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-slate-100 border-black text-slate-900 font-bold'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-md bg-white border border-slate-200 text-[11px] font-bold flex items-center justify-center text-slate-900">
+                        0{idx + 1}
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold leading-tight">{p.pageTitle}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-medium">
+                          {p.type}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          movePage(idx, 'up');
+                        }}
+                        disabled={idx === 0}
+                        className="p-1 text-slate-400 hover:text-slate-900 disabled:opacity-30"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          movePage(idx, 'down');
+                        }}
+                        disabled={idx === proposal.pages.length - 1}
+                        className="p-1 text-slate-400 hover:text-slate-900 disabled:opacity-30"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicatePage(idx);
+                        }}
+                        className="p-1 text-slate-400 hover:text-slate-900"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePage(idx);
+                        }}
+                        disabled={proposal.pages.length <= 1}
+                        className="p-1 text-slate-400 hover:text-red-500 disabled:opacity-30"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Add New Page Buttons */}
+            <div className="pt-4 border-t border-slate-200">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3">
+                Add Section Page
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleAddPage('category-table')}
+                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5 text-slate-900" />
+                  Category Table
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddPage('pricing-highlight')}
+                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
+                >
+                  <DollarSign className="w-3.5 h-3.5 text-slate-900" />
+                  Pricing Highlight
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddPage('deliverables-grid')}
+                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
+                >
+                  <Briefcase className="w-3.5 h-3.5 text-slate-900" />
+                  Deliverables
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddPage('terms-signature')}
+                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-slate-900" />
+                  Terms & Sign
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: BRANDING & CLIENT INFO */}
+        {activeTab === 'branding' && (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3">
+                Client Information
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Client Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={proposal.client.name}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        client: { ...proposal.client, name: e.target.value }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Role / Title
+                  </label>
+                  <input
+                    type="text"
+                    value={proposal.client.role}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        client: { ...proposal.client, role: e.target.value }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={proposal.client.company}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        client: { ...proposal.client, company: e.target.value }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200">
+              <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3">
+                Agency Details
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Agency Name
+                  </label>
+                  <input
+                    type="text"
+                    value={proposal.agency.name}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        agency: { ...proposal.agency, name: e.target.value }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Agency Tagline
+                  </label>
+                  <input
+                    type="text"
+                    value={proposal.agency.tagline}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        agency: { ...proposal.agency, tagline: e.target.value }
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Header Logo Image
+                  </label>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Header Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                onUpdateProposal({
+                                  ...proposal,
+                                  agency: { ...proposal.agency, logoUrl: evt.target.result as string }
+                                });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {proposal.agency.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateProposal({
+                            ...proposal,
+                            agency: { ...proposal.agency, logoUrl: '' }
+                          })
+                        }
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove Header Logo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {proposal.agency.logoUrl && (
+                    <div className="p-2 mb-1 bg-white border border-slate-200 rounded-lg flex items-center gap-2">
+                      <img src={proposal.agency.logoUrl} alt="Header Logo Preview" className="h-6 max-w-[120px] object-contain" />
+                      <span className="text-[10px] text-slate-400">Header logo loaded</span>
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={proposal.agency.logoUrl || ''}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        agency: { ...proposal.agency, logoUrl: e.target.value }
+                      })
+                    }
+                    placeholder="Or paste URL (https://...)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Footer Logo Image
+                  </label>
+                  <p className="text-[11px] text-slate-500 mb-1.5">
+                    Footer displays strictly this uploaded logo image only (no text content).
+                  </p>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Footer Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                onUpdateProposal({
+                                  ...proposal,
+                                  agency: { ...proposal.agency, footerLogoUrl: evt.target.result as string }
+                                });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {proposal.agency.footerLogoUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateProposal({
+                            ...proposal,
+                            agency: { ...proposal.agency, footerLogoUrl: '' }
+                          })
+                        }
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove Footer Logo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {proposal.agency.footerLogoUrl && (
+                    <div className="p-2 mb-1 bg-white border border-slate-200 rounded-lg flex items-center gap-2">
+                      <img src={proposal.agency.footerLogoUrl} alt="Footer Logo Preview" className="h-6 max-w-[120px] object-contain" />
+                      <span className="text-[10px] text-emerald-600 font-medium">✓ Footer logo ready</span>
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={proposal.agency.footerLogoUrl || ''}
+                    onChange={(e) =>
+                      onUpdateProposal({
+                        ...proposal,
+                        agency: { ...proposal.agency, footerLogoUrl: e.target.value }
+                      })
+                    }
+                    placeholder="Or paste URL (https://...)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: DESIGN & THEME */}
+        {activeTab === 'design' && (
+          <ThemeSelector
+            theme={proposal.theme}
+            onChange={(updatedTheme) => onUpdateProposal({ ...proposal, theme: updatedTheme })}
+          />
+        )}
+      </div>
+    </div>
+  );
+};

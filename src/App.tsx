@@ -1,0 +1,371 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Proposal } from './types';
+import { initialProposalsList, socialDrishtiProposal } from './data/initialProposals';
+import { ProposalPageCanvas } from './components/ProposalPageCanvas';
+import { ProposalEditor } from './components/ProposalEditor';
+import { Navbar } from './components/Navbar';
+import { ShareModal } from './components/ShareModal';
+import { exportProposalToPdf } from './lib/pdfGenerator';
+import { CheckCircle2, FileText } from 'lucide-react';
+
+export function App() {
+  // Load proposals from localStorage or fallback to initial templates
+  const [proposals, setProposals] = useState<Proposal[]>(() => {
+    try {
+      const saved = localStorage.getItem('proposa_proposals_v1');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to parse saved proposals', e);
+    }
+    return initialProposalsList;
+  });
+
+  const [activeProposalId, setActiveProposalId] = useState<string>(
+    proposals[0]?.id || socialDrishtiProposal.id
+  );
+
+  const [activePageIndex, setActivePageIndex] = useState<number>(0);
+  const [zoomLevel, setZoomLevel] = useState<number>(0.85);
+  const [previewModeOnly, setPreviewModeOnly] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportProgress, setExportProgress] = useState<number>(0);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+
+  const pagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Active proposal object
+  const activeProposal =
+    proposals.find((p) => p.id === activeProposalId) || proposals[0] || socialDrishtiProposal;
+
+  // Persist proposals in localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('proposa_proposals_v1', JSON.stringify(proposals));
+    } catch (e) {
+      console.error('Failed to save proposals to localStorage', e);
+    }
+  }, [proposals]);
+
+  // Check URL hash on initial load for shared proposal links
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && (hash.includes('#proposal=') || hash.includes('#share='))) {
+      try {
+        const encodedData = hash.replace('#proposal=', '').replace('#share=', '');
+        const jsonString = decodeURIComponent(encodedData);
+        const parsed: Proposal = JSON.parse(jsonString);
+
+        if (parsed && parsed.title && parsed.pages) {
+          const sharedProposal: Proposal = {
+            ...parsed,
+            id: `shared-${Date.now()}`,
+            title: parsed.title + ' (Shared)',
+            updatedAt: new Date().toISOString()
+          };
+
+          setProposals((prev) => [sharedProposal, ...prev]);
+          setActiveProposalId(sharedProposal.id);
+          showToast(`Loaded shared proposal: ${sharedProposal.title}`);
+          // Clear hash to avoid re-triggering on reload
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } catch (e) {
+        console.error('Failed to parse shared proposal URL hash', e);
+      }
+    }
+  }, []);
+
+  // Show auto-dismissing toast message
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
+
+  // Update proposal handler
+  const handleUpdateProposal = (updatedProposal: Proposal) => {
+    setProposals((prev) =>
+      prev.map((p) => (p.id === updatedProposal.id ? updatedProposal : p))
+    );
+  };
+
+  // Explicit Save callback
+  const handleSaveNow = () => {
+    try {
+      localStorage.setItem('proposa_proposals_v1', JSON.stringify(proposals));
+      showToast('All proposal changes saved to local storage!');
+    } catch (e) {
+      showToast('Saved changes.');
+    }
+  };
+
+  // Update proposal title
+  const handleUpdateProposalTitle = (id: string, newTitle: string) => {
+    setProposals((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, title: newTitle, updatedAt: new Date().toISOString() } : p))
+    );
+    showToast(`Proposal renamed to "${newTitle}"`);
+  };
+
+  // Delete proposal handler
+  const handleDeleteProposal = (idToDelete: string) => {
+    const filtered = proposals.filter((p) => p.id !== idToDelete);
+    if (filtered.length === 0) return;
+
+    setProposals(filtered);
+    if (activeProposalId === idToDelete) {
+      setActiveProposalId(filtered[0].id);
+      setActivePageIndex(0);
+    }
+    showToast('Proposal deleted.');
+  };
+
+  // Import proposal handler
+  const handleImportProposal = (importedProposal: Proposal) => {
+    setProposals((prev) => [importedProposal, ...prev]);
+    setActiveProposalId(importedProposal.id);
+    setActivePageIndex(0);
+    showToast(`Imported proposal "${importedProposal.title}"`);
+  };
+
+  // Switch active proposal
+  const handleSelectProposal = (id: string) => {
+    setActiveProposalId(id);
+    setActivePageIndex(0);
+  };
+
+  // Create brand new blank proposal
+  const handleCreateProposal = () => {
+    const newProp: Proposal = {
+      id: `prop-${Date.now()}`,
+      title: 'New Client Proposal',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      agency: { ...activeProposal.agency },
+      client: {
+        name: 'New Client',
+        role: 'Marketing Director',
+        company: 'Acme Corp',
+        email: 'client@acme.com',
+        phone: '+1 555 000 0000'
+      },
+      theme: { ...activeProposal.theme },
+      pages: [
+        {
+          id: `page-${Date.now()}-1`,
+          pageTitle: 'Cover Page',
+          type: 'cover',
+          coverData: {
+            mainTitle: 'New Client Project Proposal',
+            subtitle: 'Prepared Exclusively For',
+            clientName: 'New Client',
+            clientRole: 'Marketing Director',
+            dateText: 'August 2026',
+            showOverlayImage: true,
+            bgImageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'
+          }
+        },
+        {
+          id: `page-${Date.now()}-2`,
+          pageTitle: 'Services & Scope',
+          type: 'category-table',
+          tableData: {
+            categoryTitle: 'CATEGORY',
+            detailsTitle: 'DETAILS',
+            rows: [
+              { id: 'r1', category: 'Deliverable 1', details: '• High impact feature details\n• Specification 2' },
+              { id: 'r2', category: 'Strategy', details: 'Monthly monitoring and management' }
+            ]
+          }
+        },
+        {
+          id: `page-${Date.now()}-3`,
+          pageTitle: 'Investment & Retainer',
+          type: 'pricing-highlight',
+          pricingData: {
+            highlightBoxTitle: 'Monthly – $2,500 + Taxes',
+            highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+            notesHeader: 'Note',
+            notes: [
+              { id: 'n1', title: 'Payment Terms', description: 'Invoices payable in advance.' }
+            ]
+          }
+        }
+      ]
+    };
+
+    setProposals((prev) => [...prev, newProp]);
+    setActiveProposalId(newProp.id);
+    setActivePageIndex(0);
+    showToast('Created new proposal draft.');
+  };
+
+  // Duplicate current proposal
+  const handleDuplicateProposal = () => {
+    const duplicated: Proposal = {
+      ...JSON.parse(JSON.stringify(activeProposal)),
+      id: `prop-dup-${Date.now()}`,
+      title: `${activeProposal.title} (Copy)`,
+      updatedAt: new Date().toISOString()
+    };
+
+    setProposals((prev) => [...prev, duplicated]);
+    setActiveProposalId(duplicated.id);
+    setActivePageIndex(0);
+    showToast('Duplicated active proposal.');
+  };
+
+  // PDF Export
+  const handleExportPdf = async () => {
+    if (!pagesContainerRef.current) return;
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
+      await exportProposalToPdf(pagesContainerRef.current, filename, (progress) => {
+        setExportProgress(progress);
+      });
+      showToast('Downloaded High-Resolution PDF successfully!');
+    } catch (err: any) {
+      console.error(err);
+      showToast('PDF Export completed or opened in print dialog.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Native Browser Print
+  const handlePrintNative = () => {
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] flex flex-col font-jakarta overflow-hidden">
+      {/* Top Header Toolbar */}
+      <Navbar
+        proposals={proposals}
+        activeProposal={activeProposal}
+        onSelectProposal={handleSelectProposal}
+        onCreateProposal={handleCreateProposal}
+        onDuplicateProposal={handleDuplicateProposal}
+        onDeleteProposal={handleDeleteProposal}
+        onUpdateProposalTitle={handleUpdateProposalTitle}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
+        onSaveNow={handleSaveNow}
+        onExportPdf={handleExportPdf}
+        onPrintNative={handlePrintNative}
+        zoomLevel={zoomLevel}
+        onChangeZoom={setZoomLevel}
+        isExporting={isExporting}
+        exportProgress={exportProgress}
+        previewModeOnly={previewModeOnly}
+        onTogglePreviewMode={() => setPreviewModeOnly(!previewModeOnly)}
+      />
+
+      {/* Share & Import Modal */}
+      <ShareModal
+        proposal={activeProposal}
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onImportProposal={handleImportProposal}
+      />
+
+      {/* Main Studio Body */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="no-print fixed top-20 right-6 z-50 bg-black text-white px-4 py-2.5 rounded-lg font-semibold text-xs shadow-xl flex items-center gap-2 animate-bounce">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            {toastMessage}
+          </div>
+        )}
+
+        {/* Left Sidebar: Proposal Editor Panel */}
+        {!previewModeOnly && (
+          <div className="no-print w-[380px] flex-shrink-0 h-full border-r border-slate-200 bg-white">
+            <ProposalEditor
+              proposal={activeProposal}
+              activePageIndex={activePageIndex}
+              onSelectPage={setActivePageIndex}
+              onUpdateProposal={handleUpdateProposal}
+            />
+          </div>
+        )}
+
+        {/* Right Canvas Area: Live A4 Paginated Preview */}
+        <div className="flex-1 h-full overflow-y-auto bg-[#F1F3F5] p-8 flex flex-col items-center justify-start relative">
+          {/* Page Quick Jump Thumbnails bar */}
+          <div className="no-print sticky top-0 z-20 mb-6 bg-white/90 backdrop-blur-md border border-slate-200/80 py-1.5 px-4 rounded-full flex items-center gap-2 shadow-xs max-w-full overflow-x-auto">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mr-2">
+              Proposal Structure
+            </span>
+            {activeProposal.pages.map((p, idx) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setActivePageIndex(idx);
+                  const el = document.getElementById(`page-card-${idx}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  idx === activePageIndex
+                    ? 'bg-black text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <span className="text-[11px] opacity-70">0{idx + 1}</span>
+                <span className="max-w-[110px] truncate">{p.pageTitle}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Printable Container for PDF Export */}
+          <div
+            ref={pagesContainerRef}
+            className="print-area flex flex-col items-center space-y-12 transition-transform origin-top"
+            style={{ transform: `scale(${zoomLevel})` }}
+          >
+            {activeProposal.pages.map((page, idx) => (
+              <div
+                key={page.id}
+                id={`page-card-${idx}`}
+                className="relative flex flex-col items-center"
+              >
+                {/* Page Number Badge above card */}
+                <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-slate-700" />
+                    Page {idx + 1} of {activeProposal.pages.length} — {page.pageTitle}
+                  </span>
+                  {idx === activePageIndex && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-black bg-slate-200 px-2 py-0.5 rounded-md">
+                      Editing
+                    </span>
+                  )}
+                </div>
+
+                <ProposalPageCanvas
+                  page={page}
+                  agency={activeProposal.agency}
+                  client={activeProposal.client}
+                  theme={activeProposal.theme}
+                  pageNumber={idx + 1}
+                  totalPages={activeProposal.pages.length}
+                  isSelected={idx === activePageIndex}
+                  onClick={() => setActivePageIndex(idx)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
