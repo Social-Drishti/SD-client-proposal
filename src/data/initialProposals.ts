@@ -48,9 +48,6 @@ export const socialDrishtiProposal: Proposal = {
         clientName: "Dr. Rajneesh Kant",
         clientRole: "Chiropractor | Osteopath | Physiotherapist",
         dateText: "August 2026",
-        showOverlayImage: true,
-        bgImageUrl:
-          "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200",
       },
     },
     {
@@ -276,9 +273,6 @@ export const webDevProposal: Proposal = {
         clientName: "Sarah Jenkins",
         clientRole: "Chief Technology Officer",
         dateText: "Q3 2026",
-        showOverlayImage: true,
-        bgImageUrl:
-          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200",
       },
     },
     {

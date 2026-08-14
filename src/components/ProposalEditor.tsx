@@ -70,6 +70,8 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
     };
 
     if (type === 'cover') {
+      const now = new Date();
+      const dateText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       newPage = {
         ...newPage,
         pageTitle: 'Cover Page',
@@ -78,9 +80,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
           subtitle: 'Prepared Exclusively For',
           clientName: proposal.client.name,
           clientRole: proposal.client.role,
-          dateText: 'August 2026',
-          showOverlayImage: true,
-          bgImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200'
+          dateText,
         }
       };
     } else if (type === 'category-table') {
@@ -370,40 +370,19 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                     />
                   </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 block mb-1">
-                      Client Role / Designation
-                    </label>
-                    <input
-                      type="text"
-                      value={activePage.coverData?.clientRole || ''}
-                      onChange={(e) =>
-                        updateActivePage({
-                          ...activePage,
-                          coverData: {
-                            ...activePage.coverData!,
-                            clientRole: e.target.value
-                          }
-                        })
-                      }
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
+<div>
                   <label className="text-xs font-semibold text-slate-500 block mb-1">
-                    Background Photo Image URL
+                    Client Role / Designation
                   </label>
                   <input
                     type="text"
-                    value={activePage.coverData?.bgImageUrl || ''}
+                    value={activePage.coverData?.clientRole || ''}
                     onChange={(e) =>
                       updateActivePage({
                         ...activePage,
                         coverData: {
                           ...activePage.coverData!,
-                          bgImageUrl: e.target.value
+                          clientRole: e.target.value
                         }
                       })
                     }
@@ -411,7 +390,8 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   />
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {/* CATEGORY TABLE FORM */}
             {activePage.type === 'category-table' && (

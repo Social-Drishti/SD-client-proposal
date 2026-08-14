@@ -108,12 +108,44 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="no-print h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between z-30 select-none shrink-0">
-      {/* Mobile Hamburger Menu Button */}
+    <header className="no-print bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between z-30 select-none shrink-0 sm:h-16">
+      {/* Mobile: Stacked layout with hamburger on top, actions below */}
+      <div className="sm:hidden w-full">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenShareModal}
+              className="px-3 py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all"
+              title="Share proposal via link, JSON, or import"
+            >
+              <Share2 className="w-3.5 h-3.5 text-emerald-700" />
+            </button>
+            <button
+              type="button"
+              onClick={onDownloadPdf}
+              disabled={isExporting}
+              className="px-3 py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop: Hamburger button only */}
       <button
         type="button"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="sm:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+        className="hidden sm:block p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
       >
         {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -357,7 +389,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Action Buttons: Save + Share + Print + Export PDF */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        {/* Mobile: Only show Export PDF and hamburger handles rest */}
         <button
           type="button"
           onClick={onSaveNow}
@@ -371,11 +402,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onOpenShareModal}
-          className="px-3 py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all"
+          className="hidden sm:px-3 sm:py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all"
           title="Share proposal via link, JSON, or import"
         >
           <Share2 className="w-3.5 h-3.5 text-emerald-700" />
-          <span className="hidden sm:inline">Share</span>
+          <span>Share</span>
         </button>
 
         <button
@@ -392,10 +423,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           type="button"
           onClick={onDownloadPdf}
           disabled={isExporting}
-          className="px-3 sm:px-4 py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
+          className="hidden sm:px-3 sm:px-4 sm:py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
         >
           <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{isExporting ? `Exporting (${exportProgress}%)...` : 'Download PDF'}</span>
+          <span>{isExporting ? `Exporting (${exportProgress}%)...` : 'Download PDF'}</span>
         </button>
       </div>
 
@@ -403,7 +434,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div
           ref={mobileMenuRef}
-          className="sm:hidden fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-xl z-40 animate-in slide-in-from-top-2 duration-200 p-4 space-y-4"
+          className="sm:hidden fixed left-0 right-0 bg-white border-b border-slate-200 shadow-xl z-40 animate-in slide-in-from-top-2 duration-200 p-4 space-y-4 top-[88px] sm:top-16"
         >
           {/* Zoom Controls */}
           <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg">

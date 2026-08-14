@@ -1,0 +1,260 @@
+# SD-Client-Proposal System Design
+
+## Overview
+
+A **React-based client proposal builder** that enables agencies to create, edit, and export professional multi-page proposals as high-resolution PDFs. Built with TypeScript, React 19, Vite, and Tailwind CSS.
+
+---
+
+## Architecture
+
+### Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 19, TypeScript, Vite 6 |
+| **Styling** | Tailwind CSS 4, CSS Variables |
+| **State** | React Hooks (useState, useEffect, useRef, useCallback) |
+| **Persistence** | localStorage (client-side only) |
+| **PDF Export** | html2canvas + jsPDF |
+| **Icons** | Lucide React |
+| **Animations** | Framer Motion |
+| **AI Integration** | @google/genai (optional) |
+| **Server** | Express + Vite dev middleware (SSR-ready) |
+
+### Project Structure
+
+```
+src/
+├── App.tsx                    # Root component - orchestrates all state & views
+├── main.tsx                   # Entry point
+├── types.ts                   # Core TypeScript interfaces (162 lines)
+├── index.css                  # Global styles + Tailwind + font imports
+├── data/
+│   └── initialProposals.ts    # Seed data: 2 demo proposals
+├── lib/
+│   └── pdfGenerator.ts        # High-res PDF export with progress tracking
+��── components/
+    ├── ProposalPageCanvas.tsx # Page renderer - routes to page type components
+    ├── SwipeablePages.tsx     # Touch/swipe navigation for A4 pages
+    ├── ProposalEditor.tsx     # Left sidebar editor panel
+    ├── Navbar.tsx             # Top toolbar (actions, zoom, themes, share)
+    ├── CoverPage.tsx          # Cover page layout
+    ├── CategoryTablePage.tsx  # Two-column category/detail tables
+    ├── PricingPage.tsx        # Pricing highlight + optional table
+    ├── DeliverablesPage.tsx   # Grid of deliverable cards
+    ├── MilestonesPage.tsx     # Timeline/phase steps
+    ├── TermsPage.tsx          # Legal terms + signature blocks
+    ├── FreeformPage.tsx       # Rich text narrative page
+    ├── PageHeader.tsx         # Shared header with logo/nav
+    ├── PageFooter.tsx         # Shared footer with page numbers
+    ├── WatermarkOverlay.tsx   # Optional logo/text watermark
+    ├── ThemeSelector.tsx      # 5 built-in theme presets
+    ├── SplitEditor.tsx        # Split view: editor + live preview
+    ├── ShareModal.tsx         # Share/import via URL hash
+    └── ExportProgressModal.tsx # PDF export progress UI
+```
+
+---
+
+## Data Model
+
+### Core Types (`src/types.ts`)
+
+```typescript
+// Page types available in proposals
+type PageType = 
+  | 'cover'
+  | 'category-table'
+  | 'pricing-highlight'
+  | 'deliverables-grid'
+  | 'milestones'
+  | 'terms-signature'
+  | 'freeform';
+
+// Theme presets
+type TemplateStyle = 
+  | 'social-drishti'
+  | 'navy-gold'
+  | 'emerald-slate'
+  | 'minimal-charcoal'
+  | 'creative-indigo';
+
+// Complete proposal structure
+interface Proposal {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  agency: ProposalAgency;    // Agency branding & contact
+  client: ProposalClient;    // Client info
+  theme: ProposalTheme;      // Visual theme configuration
+  pages: ProposalPage[];     // Ordered page array
+}
+
+// Per-page data (discriminated union via `type`)
+interface ProposalPage {
+  id: string;
+  pageTitle: string;
+  type: PageType;
+  accentBarColor?: string;
+  coverData?: CoverPageData;
+  tableData?: TablePageData;
+  pricingData?: PricingPageData;
+  deliverablesData?: DeliverablesPageData;
+  milestonesData?: MilestonesPageData;
+  termsData?: TermsPageData;
+  freeformData?: FreeformPageData;
+}
+```
+
+### Theme System
+
+5 built-in themes with full customization:
+
+| Theme | Primary | Accent | Gradient | Font |
+|-------|---------|--------|----------|------|
+| Social Drishti | Teal `#00838f` | Amber `#f59e0b` | teal-wave | Plus Jakarta Sans |
+| Navy Gold | Navy `#1e3a8a` | Gold `#d97706` | navy-slate | Outfit |
+| Emerald Slate | Emerald `#059669` | Slate `#64748b` | emerald-glass | Playfair Display |
+| Minimal Charcoal | Charcoal `#18181b` | Zinc `#71717a` | minimal-light | Inter |
+| Creative Indigo | Indigo `#4f46e5` | Rose `#e11d48` | indigo-rose | Plus Jakarta Sans |
+
+**Theme properties:** colors, gradients, fonts, logo visibility, page numbers, watermark (logo/text/opacity), custom header/footer text.
+
+---
+
+## Key Features
+
+### 1. Multi-Mode View System
+
+| Mode | Description |
+|------|-------------|
+| **Normal** | Sidebar editor (left) + full paginated preview (right) |
+| **Split View** | Editor + single active page preview side-by-side |
+| **Preview Only** | Full-width swipeable preview, no editor |
+
+### 2. Page Types (7)
+
+| Type | Use Case |
+|------|----------|
+| `cover` | Hero page with background image, client name, date |
+| `category-table` | Two-column scope/deliverables tables |
+| `pricing-highlight` | Prominent price box + notes + optional detail table |
+| `deliverables-grid` | Card grid with icons, badges, descriptions |
+| `milestones` | Timeline phases with duration & deliverables |
+| `terms-signature` | Legal terms, payment terms, dual signature blocks |
+| `freeform` | Custom narrative content (executive summary, etc.) |
+
+### 3. PDF Export (`pdfGenerator.ts`)
+
+- **High-resolution**: 3x scale (configurable)
+- **Chunked rendering**: Processes pages in batches (2-3) to prevent OOM on mobile
+- **Progress tracking**: Real-time callbacks with ETA
+- **Abort support**: Cancellable via AbortController
+- **Fallback**: Blob download if `pdf.save()` fails
+- **Image handling**: CORS + timeout + preload
+- **OKLCH fix**: Replaces unsupported CSS color functions for html2canvas
+
+### 4. Sharing & Import
+
+- **URL hash sharing**: Serializes full proposal to `#proposal=<encoded-json>`
+- **Import modal**: Paste JSON or load from shared URL
+- **localStorage persistence**: Auto-saves all proposals
+
+### 5. Responsive Design
+
+- **Desktop**: Persistent 380px sidebar
+- **Mobile (<1024px)**: Slide-out drawer + FAB for actions
+- **Touch**: Swipe navigation between pages (SwipeablePages)
+- **Zoom**: 0.5x–1.5x canvas scaling
+
+---
+
+## State Management (App.tsx)
+
+```typescript
+// Proposals array (persisted)
+const [proposals, setProposals] = useState<Proposal[]>(...)
+
+// Active proposal & page
+const [activeProposalId, setActiveProposalId] = useState<string>(...)
+const [activePageIndex, setActivePageIndex] = useState<number>(0)
+
+// UI State
+const [zoomLevel, setZoomLevel] = useState(0.85)
+const [previewModeOnly, setPreviewModeOnly] = useState(false)
+const [splitView, setSplitView] = useState(false)
+const [sidebarOpen, setSidebarOpen] = useState(true)
+const [isMobile, setIsMobile] = useState(false)
+
+// Export State
+const [isExporting, setIsExporting] = useState(false)
+const [exportProgress, setExportProgress] = useState(0)
+const [exportProgressDetail, setExportProgressDetail] = useState<ExportProgressDetail>(...)
+
+// Modals
+const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+const [isExportProgressOpen, setIsExportProgressOpen] = useState(false)
+```
+
+**Persistence**: `useEffect` syncs `proposals` → `localStorage` on every change.
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + S` | Save to localStorage |
+| `Ctrl/Cmd + Shift + P` | Toggle preview mode |
+| `← / →` | Navigate pages (when not in input) |
+| `Escape` | Close modals / mobile sidebar |
+
+---
+
+## Build & Run
+
+```bash
+# Install
+npm install
+
+# Dev (Vite + Express)
+npm run dev
+
+# Build (client + server bundle)
+npm run build
+
+# Preview production build
+npm run preview
+
+# Lint / TypeCheck
+npm run lint
+```
+
+---
+
+## Deployment Notes
+
+- **Static hosting**: `dist/` contains client assets + `server.cjs` for SSR
+- **Environment**: Requires `GEMINI_API_KEY` for AI features (optional)
+- **No database**: All data in localStorage / URL hash
+- **Node 18+** required for `fetch`, `AbortController`, modern globals
+
+---
+
+## Extensibility Points
+
+1. **Add page type**: 
+   - Add to `PageType` union in `types.ts`
+   - Create component in `components/`
+   - Add case in `ProposalPageCanvas.tsx`
+   - Add button in `ProposalEditor.tsx` + `handleAddPage()` in `App.tsx`
+
+2. **Add theme**: 
+   - Add to `TemplateStyle` union
+   - Define defaults in `ThemeSelector.tsx`
+
+3. **Add export format**: Extend `pdfGenerator.ts` or add new lib
+
+4. **Backend persistence**: Replace localStorage with API calls in `App.tsx` effects

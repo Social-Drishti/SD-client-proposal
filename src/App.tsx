@@ -241,9 +241,7 @@ export function App() {
             subtitle: 'Prepared Exclusively For',
             clientName: 'New Client',
             clientRole: 'Marketing Director',
-            dateText: 'August 2026',
-            showOverlayImage: true,
-            bgImageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'
+            dateText: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
           }
         },
         {
@@ -305,6 +303,8 @@ export function App() {
     };
 
     if (type === 'cover') {
+      const now = new Date();
+      const dateText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       newPage = {
         ...newPage,
         pageTitle: 'Cover Page',
@@ -313,9 +313,7 @@ export function App() {
           subtitle: 'Prepared Exclusively For',
           clientName: activeProposal.client.name,
           clientRole: activeProposal.client.role,
-          dateText: 'August 2026',
-          showOverlayImage: true,
-          bgImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200'
+          dateText,
         }
       };
     } else if (type === 'category-table') {

@@ -82,8 +82,6 @@ export interface CoverPageData {
   clientName: string;
   clientRole: string;
   dateText: string;
-  bgImageUrl?: string;
-  showOverlayImage?: boolean;
 }
 
 export interface FreeformPageData {

@@ -113,7 +113,7 @@ export async function exportProposalToPdf(
   options: ExportOptions = {}
 ): Promise<void> {
   const {
-    scale = getDeviceScale(),
+    scale = 3,
     chunkSize = getChunkSize(
       Array.from(pagesContainerElement.querySelectorAll<HTMLElement>('.a4-page')).length
     ),
@@ -214,7 +214,7 @@ export async function exportProposalToPdf(
           }
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const imgData = canvas.toDataURL('image/png', 1.0);
 
         onProgress?.({
           progress: Math.round(((completedPages + 1) / totalPages) * 100),
@@ -230,7 +230,7 @@ export async function exportProposalToPdf(
           pdf.addPage('a4', 'portrait');
         }
 
-        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
         completedPages++;
 
         // Yield to main thread between pages to keep UI responsive
