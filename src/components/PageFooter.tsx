@@ -18,7 +18,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
   if (!showFooter) return null;
 
   const footerLogoUrl =
-    theme.footerLogoUrl || agency.footerLogoUrl || "/SD_LOGO.png";
+    theme.footerLogoUrl || agency.footerLogoUrl || "/SD-LOGO.png";
   const [logoSrc, setLogoSrc] = React.useState(footerLogoUrl);
 
   return (
