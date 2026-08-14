@@ -27,14 +27,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       : agency.website || "";
 
   return (
-    <div className="mb-6">
+    <div className="mb-4 sm:mb-6">
       {/* Top Header Bar */}
       {showHeader && (
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 min-h-[52px]">
+        <div className="flex items-center justify-between pb-2 sm:pb-3 mb-3 sm:mb-4 border-b border-slate-100 min-h-[48px] sm:min-h-[52px]">
           {/* Left Text / Spacer */}
           <div className="flex-1 flex justify-start">
             {!logoUrl && headerLeftText ? (
-              <span className="text-xs font-bold tracking-wider text-slate-800 uppercase">
+              <span className="text-[10px] sm:text-xs font-bold tracking-wider text-slate-800 uppercase">
                 {headerLeftText}
               </span>
             ) : null}
@@ -46,7 +46,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               <img
                 src={logoUrl}
                 alt="Header Logo"
-                className="h-16 sm:h-20 max-h-24 max-w-[480px] w-auto object-contain py-0.5 filter drop-shadow-xs transition-all"
+                className="h-12 sm:h-16 max-h-20 max-w-[480px] w-auto object-contain py-0.5 filter drop-shadow-xs transition-all"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   // Fallback to default brand logo if custom URL fails to load
@@ -68,13 +68,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       )}
 
       {/* Main Page Title with Vertical Accent Bar */}
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-2.5 sm:gap-3.5">
         <div
-          className="w-2.5 h-10 rounded-full flex-shrink-0"
+          className="w-2 h-8 sm:w-2.5 sm:h-10 rounded-full flex-shrink-0"
           style={{ backgroundColor: theme.accentColor }}
         />
         <h2
-          className="text-3xl font-extrabold tracking-tight"
+          className="text-2xl sm:text-3xl font-extrabold tracking-tight"
           style={{ color: theme.primaryColor }}
         >
           {pageTitle}
@@ -83,7 +83,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
       {/* Horizontal Divider */}
       <div
-        className="w-full h-[2.5px] mt-4"
+        className="w-full h-[2px] sm:h-[2.5px] mt-3 sm:mt-4"
         style={{ backgroundColor: theme.primaryColor }}
       />
     </div>

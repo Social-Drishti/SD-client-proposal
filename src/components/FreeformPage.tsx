@@ -24,14 +24,14 @@ export const FreeformPage: React.FC<FreeformPageProps> = ({
   const content = data?.content || 'Add custom proposal text, executive summaries, or brand background here.';
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-10 select-none">
+    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
       <WatermarkOverlay theme={theme} agency={agency} />
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Top Header */}
         <PageHeader pageTitle={pageTitle} agency={agency} theme={theme} />
 
         {/* Freeform Body Content */}
-        <div className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap flex-1 my-2">
+        <div className="text-slate-700 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap flex-1 my-2">
           {content}
         </div>
       </div>

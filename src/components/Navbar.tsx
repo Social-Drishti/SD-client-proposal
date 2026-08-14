@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Proposal } from '../types';
 import {
   Download,
@@ -14,7 +14,9 @@ import {
   Share2,
   Trash2,
   Pencil,
-  Save
+  Save,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -59,6 +61,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [tempTitle, setTempTitle] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleStartRename = (p: Proposal, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,15 +100,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="no-print h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-30 select-none shrink-0">
+    <header className="no-print h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between z-30 select-none shrink-0">
+      {/* Mobile Hamburger Menu Button */}
+      <button
+        type="button"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="sm:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+        aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+      >
+        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
       {/* Brand & Proposal Switcher */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
         {/* Brand Icon */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-black flex items-center justify-center rounded-lg shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 bg-black flex items-center justify-center rounded-lg shadow-xs flex-shrink-0">
             <span className="text-white font-bold text-xs uppercase">P</span>
           </div>
-          <div className="hidden sm:block">
+          <div className="hidden sm:block min-w-0">
             {editingTitleId === activeProposal.id ? (
               <form onSubmit={(e) => handleSaveRename(activeProposal.id, e)} className="flex items-center gap-1">
                 <input
@@ -103,42 +127,42 @@ export const Navbar: React.FC<NavbarProps> = ({
                   value={tempTitle}
                   onChange={(e) => setTempTitle(e.target.value)}
                   onBlur={(e) => handleSaveRename(activeProposal.id, e)}
-                  className="text-xs font-bold text-slate-900 border border-slate-300 rounded px-2 py-0.5 focus:outline-none focus:border-black"
+                  className="text-xs font-bold text-slate-900 border border-slate-300 rounded px-2 py-0.5 focus:outline-none focus:border-black w-48 sm:w-64 truncate"
                 />
                 <button type="submit" className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
                   <Check className="w-3.5 h-3.5" />
                 </button>
               </form>
             ) : (
-              <h1 className="text-sm font-medium tracking-tight text-slate-500 flex items-center gap-2">
+              <h1 className="text-xs sm:text-sm font-medium tracking-tight text-slate-500 flex items-center gap-2 truncate">
                 Draft / <span className="text-slate-900 font-semibold">{activeProposal.title}</span>
                 <button
                   onClick={(e) => handleStartRename(activeProposal, e)}
-                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors flex-shrink-0"
                   title="Rename Proposal"
                 >
-                  <Pencil className="w-3 h-3" />
+                  <Pencil className="w-3.5 h-3.5" />
                 </button>
               </h1>
             )}
           </div>
         </div>
 
-        <div className="h-5 w-[1px] bg-slate-200 hidden sm:block" />
+        <div className="h-5 w-[1px] bg-slate-200 hidden sm:block mx-2" />
 
         {/* Proposal Selector Dropdown */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-800 transition-all max-w-[260px]"
+            className="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-800 transition-all max-w-[180px] sm:max-w-[260px] min-w-0"
           >
             <span className="truncate">{activeProposal.title}</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
+            <div className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-2 py-1.5">
                 Saved Proposals ({proposals.length})
               </p>
@@ -248,8 +272,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Center Controls: Canvas Zoom & View Mode */}
-      <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-lg">
+      {/* Center Controls: Canvas Zoom & View Mode - Hidden on mobile, shown in mobile menu */}
+      <div className="hidden sm:flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-lg">
         <button
           type="button"
           onClick={() => onChangeZoom(Math.max(0.4, zoomLevel - 0.1))}
@@ -298,7 +322,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Action Buttons: Save + Share + Print + Export PDF */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        {/* Mobile: Only show Export PDF and hamburger handles rest */}
         <button
           type="button"
           onClick={onSaveNow}
@@ -316,29 +341,126 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Share proposal via link, JSON, or import"
         >
           <Share2 className="w-3.5 h-3.5 text-emerald-700" />
-          <span>Share</span>
+          <span className="hidden sm:inline">Share</span>
         </button>
 
         <button
           type="button"
           onClick={onPrintNative}
-          className="px-3 py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 flex items-center gap-2 transition-all"
+          className="hidden sm:px-3 sm:py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 flex items-center gap-2 transition-all"
           title="Print to PDF via Browser"
         >
           <Printer className="w-3.5 h-3.5 text-slate-500" />
-          Print
+          <span>Print</span>
         </button>
 
         <button
           type="button"
           onClick={onExportPdf}
           disabled={isExporting}
-          className="px-4 sm:px-5 py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
+          className="px-3 sm:px-4 py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
         >
           <Download className="w-3.5 h-3.5" />
-          {isExporting ? `Exporting (${exportProgress}%)...` : 'Export PDF'}
+          <span className="hidden sm:inline">{isExporting ? `Exporting (${exportProgress}%)...` : 'Export PDF'}</span>
         </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          ref={mobileMenuRef}
+          className="sm:hidden fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-xl z-40 animate-in slide-in-from-top-2 duration-200 p-4 space-y-4"
+        >
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-lg">
+            <button
+              type="button"
+              onClick={() => onChangeZoom(Math.max(0.4, zoomLevel - 0.1))}
+              className="p-2 text-slate-500 hover:text-slate-900 rounded hover:bg-white transition-all"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-5 h-5" />
+            </button>
+
+            <span className="text-sm font-mono font-medium text-slate-700 px-3">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+
+            <button
+              type="button"
+              onClick={() => onChangeZoom(Math.min(1.3, zoomLevel + 0.1))}
+              className="p-2 text-slate-500 hover:text-slate-900 rounded hover:bg-white transition-all"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-5 h-5" />
+            </button>
+
+            <div className="h-5 w-[1px] bg-slate-200 mx-2 flex-shrink-0" />
+
+            <button
+              type="button"
+              onClick={onTogglePreviewMode}
+              className={`px-3 py-2 rounded text-sm font-medium flex items-center gap-2 transition-all flex-1 justify-center ${
+                previewModeOnly
+                  ? 'bg-black text-white'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+              }`}
+            >
+              {previewModeOnly ? (
+                <>
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Editor View
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Full Preview
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => { onSaveNow(); setMobileMenuOpen(false); }}
+              className="py-3 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-semibold text-slate-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Save className="w-4 h-4 text-slate-600" />
+              Save
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { onOpenShareModal(); setMobileMenuOpen(false); }}
+              className="py-3 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+            >
+              <Share2 className="w-4 h-4 text-emerald-700" />
+              Share
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { onPrintNative(); setMobileMenuOpen(false); }}
+              className="py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+            >
+              <Printer className="w-4 h-4 text-slate-500" />
+              Print
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { onExportPdf(); setMobileMenuOpen(false); }}
+              disabled={isExporting}
+              className="py-3 bg-black text-white rounded-lg hover:bg-slate-800 text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? `Exporting...` : 'Export PDF'}
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

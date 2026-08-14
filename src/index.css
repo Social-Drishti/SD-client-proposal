@@ -87,3 +87,48 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Touch target sizing for mobile */
+@media (max-width: 1023px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Better thumbnail scrolling on mobile */
+@media (max-width: 767px) {
+  .rounded-full.flex.items-center.gap-2 {
+    padding-bottom: 8px;
+  }
+  
+  .rounded-full.flex.items-center.gap-2 button {
+    min-height: 40px;
+  }
+}
+
+/* Mobile sidebar transitions */
+@media (max-width: 1023px) {
+  .fixed.top-16.left-0.bottom-0 {
+    height: calc(100vh - 64px);
+  }
+}
+
+/* Responsive page scaling */
+@media (max-width: 1023px) {
+  .print-area {
+    transform-origin: top center !important;
+  }
+}
+
+/* Ensure A4 pages don't overflow on mobile */
+@media (max-width: 767px) {
+  .a4-page {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+}

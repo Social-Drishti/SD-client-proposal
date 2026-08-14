@@ -26,7 +26,7 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
   const rows = data?.rows || [];
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-10 select-none">
+    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
       {/* Background Watermark Overlay */}
       <WatermarkOverlay theme={theme} agency={agency} />
 
@@ -36,18 +36,18 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
         <PageHeader pageTitle={pageTitle} agency={agency} theme={theme} />
 
         {/* Table Column Headers */}
-        <div className="grid grid-cols-12 gap-6 pb-3 mb-4 border-b border-slate-200">
-          <div className="col-span-4">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6 pb-3 mb-4 border-b border-slate-200">
+          <div className="col-span-12 sm:col-span-4">
             <h3
-              className="text-lg font-black italic tracking-wide uppercase"
+              className="text-base sm:text-lg font-black italic tracking-wide uppercase"
               style={{ color: theme.primaryColor }}
             >
               {categoryHeader}
             </h3>
           </div>
-          <div className="col-span-8">
+          <div className="col-span-12 sm:col-span-8 mt-2 sm:mt-0">
             <h3
-              className="text-lg font-black italic tracking-wide uppercase"
+              className="text-base sm:text-lg font-black italic tracking-wide uppercase"
               style={{ color: theme.primaryColor }}
             >
               {detailsHeader}
@@ -56,24 +56,24 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
         </div>
 
         {/* Table Rows */}
-        <div className="flex-1 flex flex-col justify-start space-y-6">
+        <div className="flex-1 flex flex-col justify-start space-y-4 sm:space-y-6">
           {rows.map((row) => {
             const detailLines = row.details.split('\n');
 
             return (
               <div
                 key={row.id}
-                className="grid grid-cols-12 gap-6 items-start py-1"
+                className="grid grid-cols-12 gap-4 sm:gap-6 items-start py-1"
               >
                 {/* Category Name Column */}
-                <div className="col-span-4 pr-2">
-                  <h4 className="text-base font-bold text-slate-900 leading-tight">
+                <div className="col-span-12 sm:col-span-4 pr-2">
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
                     {row.category}
                   </h4>
                 </div>
 
                 {/* Details Description Column */}
-                <div className="col-span-8 text-slate-700 text-sm font-medium leading-relaxed space-y-1">
+                <div className="col-span-12 sm:col-span-8 text-slate-700 text-xs sm:text-sm font-medium leading-relaxed space-y-1">
                   {detailLines.map((line, idx) => {
                     const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
                     const text = isBullet ? line.trim().replace(/^[•-]\s*/, '') : line;

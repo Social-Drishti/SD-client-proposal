@@ -11,7 +11,7 @@ export const socialDrishtiProposal: Proposal = {
     logoUrl: "/black-sd-logo.png",
     footerLogoUrl: "/SD-LOGO.png",
     email: "info@socialdrishti.com",
-    phone: "+91 98765 43210",
+    phone: "+91 83691 82198",
     website: "www.socialdrishti.com",
     address: "Goregoan| Mumbai",
   },

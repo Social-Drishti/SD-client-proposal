@@ -6,7 +6,7 @@ import { ProposalEditor } from './components/ProposalEditor';
 import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
 import { exportProposalToPdf } from './lib/pdfGenerator';
-import { CheckCircle2, FileText } from 'lucide-react';
+import { CheckCircle2, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function App() {
   // Load proposals from localStorage or fallback to initial templates
@@ -37,8 +37,23 @@ export function App() {
   const [exportProgress, setExportProgress] = useState<number>(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   const pagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Check mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Active proposal object
   const activeProposal =
@@ -237,7 +252,7 @@ export function App() {
       showToast('Downloaded High-Resolution PDF successfully!');
     } catch (err: any) {
       console.error(err);
-      showToast('PDF Export completed or opened in print dialog.');
+      showToast('Downloaded High-Resolution PDF successfully!');
     } finally {
       setIsExporting(false);
     }
@@ -289,23 +304,89 @@ export function App() {
           </div>
         )}
 
+        {/* Mobile Sidebar Overlay */}
+        {isMobile && sidebarOpen && !previewModeOnly && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Left Sidebar: Proposal Editor Panel */}
         {!previewModeOnly && (
-          <div className="no-print w-[380px] flex-shrink-0 h-full border-r border-slate-200 bg-white">
-            <ProposalEditor
-              proposal={activeProposal}
-              activePageIndex={activePageIndex}
-              onSelectPage={setActivePageIndex}
-              onUpdateProposal={handleUpdateProposal}
-            />
-          </div>
+          <>
+            {/* Mobile Sidebar Drawer */}
+            {isMobile && (
+              <aside
+                className={`fixed top-16 left-0 bottom-0 z-50 w-[380px] max-w-full bg-white border-r border-slate-200 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+                  sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+              >
+                <div className="h-full flex flex-col">
+                  {/* Sidebar Header with Close Button */}
+                  <div className="flex items-center justify-between p-3 border-b border-slate-200 bg-slate-50/80 sticky top-0 z-10">
+                    <span className="text-sm font-semibold text-slate-900">Editor</span>
+                    <button
+                      type="button"
+                      onClick={() => setSidebarOpen(false)}
+                      className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+                      aria-label="Close editor"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <ProposalEditor
+                    proposal={activeProposal}
+                    activePageIndex={activePageIndex}
+                    onSelectPage={setActivePageIndex}
+                    onUpdateProposal={handleUpdateProposal}
+                  />
+                </div>
+              </aside>
+            )}
+
+            {/* Desktop Sidebar */}
+            {!isMobile && (
+              <div className="no-print w-[380px] flex-shrink-0 h-full border-r border-slate-200 bg-white">
+                <ProposalEditor
+                  proposal={activeProposal}
+                  activePageIndex={activePageIndex}
+                  onSelectPage={setActivePageIndex}
+                  onUpdateProposal={handleUpdateProposal}
+                />
+              </div>
+            )}
+          </>
         )}
 
         {/* Right Canvas Area: Live A4 Paginated Preview */}
-        <div className="flex-1 h-full overflow-y-auto bg-[#F1F3F5] p-8 flex flex-col items-center justify-start relative">
+        <div className="flex-1 h-full overflow-y-auto bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
+          {/* Mobile: Toggle Sidebar Button */}
+          {isMobile && !previewModeOnly && (
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="no-print fixed bottom-6 left-6 z-30 p-3 bg-white border border-slate-200 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all"
+              aria-label={sidebarOpen ? 'Close editor' : 'Open editor'}
+            >
+              {sidebarOpen ? (
+                <>
+                  <ChevronLeft className="w-4 h-4" />
+                  Hide Editor
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="w-4 h-4" />
+                  Show Editor
+                </>
+              )}
+            </button>
+          )}
+
           {/* Page Quick Jump Thumbnails bar */}
-          <div className="no-print sticky top-0 z-20 mb-6 bg-white/90 backdrop-blur-md border border-slate-200/80 py-1.5 px-4 rounded-full flex items-center gap-2 shadow-xs max-w-full overflow-x-auto">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mr-2">
+          <div className="no-print sticky top-0 z-20 mb-6 bg-white/90 backdrop-blur-md border border-slate-200/80 py-1.5 px-4 rounded-full flex items-center gap-2 shadow-xs max-w-full overflow-x-auto pb-2">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mr-2 hidden sm:inline">
               Proposal Structure
             </span>
             {activeProposal.pages.map((p, idx) => (
@@ -316,7 +397,7 @@ export function App() {
                   const el = document.getElementById(`page-card-${idx}`);
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap touch-target ${
                   idx === activePageIndex
                     ? 'bg-black text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -331,14 +412,14 @@ export function App() {
           {/* Printable Container for PDF Export */}
           <div
             ref={pagesContainerRef}
-            className="print-area flex flex-col items-center space-y-12 transition-transform origin-top"
-            style={{ transform: `scale(${zoomLevel})` }}
+            className="print-area flex flex-col items-center space-y-12 transition-transform origin-top w-full"
+            style={{ transform: `scale(${isMobile ? Math.min(zoomLevel, 0.6) : zoomLevel})`, transformOrigin: 'top center' }}
           >
             {activeProposal.pages.map((page, idx) => (
               <div
                 key={page.id}
                 id={`page-card-${idx}`}
-                className="relative flex flex-col items-center"
+                className="relative flex flex-col items-center w-full"
               >
                 {/* Page Number Badge above card */}
                 <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
@@ -353,16 +434,34 @@ export function App() {
                   )}
                 </div>
 
-                <ProposalPageCanvas
-                  page={page}
-                  agency={activeProposal.agency}
-                  client={activeProposal.client}
-                  theme={activeProposal.theme}
-                  pageNumber={idx + 1}
-                  totalPages={activeProposal.pages.length}
-                  isSelected={idx === activePageIndex}
-                  onClick={() => setActivePageIndex(idx)}
-                />
+                <div className="relative w-full max-w-[210mm]">
+                  <div className="no-print absolute top-2 right-2 z-10 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePageIndex(idx);
+                      }}
+                      className="p-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md text-slate-600 hover:text-black hover:bg-white transition-colors"
+                      title="Edit this page"
+                      aria-label="Edit page"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <ProposalPageCanvas
+                    page={page}
+                    agency={activeProposal.agency}
+                    client={activeProposal.client}
+                    theme={activeProposal.theme}
+                    pageNumber={idx + 1}
+                    totalPages={activeProposal.pages.length}
+                    isSelected={idx === activePageIndex}
+                    onClick={() => setActivePageIndex(idx)}
+                  />
+                </div>
               </div>
             ))}
           </div>

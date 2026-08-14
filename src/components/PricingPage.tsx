@@ -30,7 +30,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const notes = pricingData?.notes || [];
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-10 select-none">
+    <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
       <WatermarkOverlay theme={theme} agency={agency} />
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Top Header */}
@@ -38,32 +38,32 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
         {/* Optional Format/Revision Table Rows */}
         {rows.length > 0 && (
-          <div className="space-y-6 mb-12">
+          <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
             {rows.map((row) => (
-              <div key={row.id} className="grid grid-cols-12 gap-6 items-start">
-                <div className="col-span-4">
-                  <h4 className="text-base font-bold text-slate-900 leading-tight">
+              <div key={row.id} className="grid grid-cols-12 gap-4 sm:gap-6 items-start">
+                <div className="col-span-12 sm:col-span-4">
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
                     {row.category}
                   </h4>
                 </div>
-                <div className="col-span-8 text-slate-700 text-sm font-medium">
+                <div className="col-span-12 sm:col-span-8 mt-1 sm:mt-0 text-slate-700 text-xs sm:text-sm font-medium">
                   {row.details}
                 </div>
               </div>
             ))}
-            <div className="w-full h-[1px] bg-slate-200 mt-6" />
+            <div className="w-full h-[1px] bg-slate-200 mt-4 sm:mt-6" />
           </div>
         )}
 
         {/* Highlighted Price Pill Container */}
-        <div className="my-6">
-          <div className="bg-[#0b1329] text-white rounded-2xl py-5 px-8 text-center shadow-md border border-slate-800">
-            <h3 className="text-2xl font-extrabold tracking-tight">
+        <div className="my-4 sm:my-6">
+          <div className="bg-[#0b1329] text-white rounded-xl sm:rounded-2xl py-4 sm:py-5 px-6 sm:px-8 text-center shadow-md border border-slate-800">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">
               {highlightTitle}
             </h3>
           </div>
           {highlightSubtitle && (
-            <p className="text-center text-sm font-semibold text-slate-600 mt-3">
+            <p className="text-center text-sm font-semibold text-slate-600 mt-2 sm:mt-3">
               {highlightSubtitle}
             </p>
           )}
@@ -71,13 +71,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
         {/* Note Section */}
         {notes.length > 0 && (
-          <div className="mt-10">
-            <h4 className="text-lg font-bold text-red-600 mb-3">
+          <div className="mt-6 sm:mt-10">
+            <h4 className="text-base sm:text-lg font-bold text-red-600 mb-2 sm:mb-3">
               {notesHeader}
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {notes.map((note) => (
-                <div key={note.id} className="text-sm leading-relaxed text-slate-700">
+                <div key={note.id} className="text-xs sm:text-sm leading-relaxed text-slate-700">
                   <span className="font-bold text-slate-900">{note.title}</span>
                   {' – '}
                   <span>{note.description}</span>
