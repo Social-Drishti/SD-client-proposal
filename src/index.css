@@ -132,3 +132,70 @@
     margin-bottom: 16px;
   }
 }
+
+/* Print Preview Styles - Applied when opening preview tab */
+@media print {
+  body {
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-area {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .a4-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    page-break-after: always;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
+
+/* Print Preview Mode (for preview tab) */
+.print-preview-mode {
+  background: #f1f3f5 !important;
+}
+
+.print-preview-mode .a4-page {
+  box-shadow: 0 20px 50px -10px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  margin-bottom: 24px !important;
+  width: 210mm !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.print-preview-mode .print-area {
+  transform: none !important;
+  transform-origin: top center !important;
+}
+
+/* Page header/footer visibility in print */
+@media print {
+  .page-header,
+  .page-footer {
+    display: block !important;
+  }
+  
+  .watermark-overlay {
+    opacity: 0.05 !important;
+  }
+}

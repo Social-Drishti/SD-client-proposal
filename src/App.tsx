@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Proposal } from './types';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Proposal, PageType, ProposalPage } from './types';
 import { initialProposalsList, socialDrishtiProposal } from './data/initialProposals';
 import { ProposalPageCanvas } from './components/ProposalPageCanvas';
 import { ProposalEditor } from './components/ProposalEditor';
+import { SwipeablePages } from './components/SwipeablePages';
 import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
-import { exportProposalToPdf } from './lib/pdfGenerator';
-import { CheckCircle2, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ExportProgressModal } from './components/ExportProgressModal';
+import { exportProposalToPdf, ExportProgressDetail } from './lib/pdfGenerator';
+import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
 export function App() {
   // Load proposals from localStorage or fallback to initial templates
@@ -35,12 +37,22 @@ export function App() {
   const [previewModeOnly, setPreviewModeOnly] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportProgress, setExportProgress] = useState<number>(0);
+  const [exportProgressDetail, setExportProgressDetail] = useState<ExportProgressDetail>({
+    progress: 0,
+    currentPage: 0,
+    totalPages: 0,
+    status: 'idle'
+  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [isExportProgressOpen, setIsExportProgressOpen] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [splitView, setSplitView] = useState<boolean>(false);
+  const [fabMenuOpen, setFabMenuOpen] = useState<boolean>(false);
 
   const pagesContainerRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Check mobile viewport
   useEffect(() => {
@@ -122,6 +134,52 @@ export function App() {
     }
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+      // Ctrl/Cmd + S: Save
+      if (modifier && e.key === 's') {
+        e.preventDefault();
+        handleSaveNow();
+      }
+
+      // Ctrl/Cmd + Shift + P: Toggle Preview Mode
+      if (modifier && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        setPreviewModeOnly(!previewModeOnly);
+      }
+
+      // Arrow Left/Right: Navigate pages (when not in preview mode and sidebar closed on mobile)
+      if (!previewModeOnly && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        if (!isMobile || !sidebarOpen) {
+          e.preventDefault();
+          const newIndex = e.key === 'ArrowLeft' 
+            ? Math.max(0, activePageIndex - 1)
+            : Math.min(activeProposal.pages.length - 1, activePageIndex + 1);
+          setActivePageIndex(newIndex);
+        }
+      }
+
+      // Escape: Close modals/sidebar
+      if (e.key === 'Escape') {
+        if (isShareModalOpen) setIsShareModalOpen(false);
+        if (isExportProgressOpen) abortControllerRef.current?.abort();
+        if (isMobile && sidebarOpen) setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activePageIndex, activeProposal.pages.length, handleSaveNow, isMobile, sidebarOpen, isShareModalOpen, isExportProgressOpen, previewModeOnly]);
+
   // Update proposal title
   const handleUpdateProposalTitle = (id: string, newTitle: string) => {
     setProposals((prev) =>
@@ -168,8 +226,8 @@ export function App() {
       client: {
         name: 'New Client',
         role: 'Marketing Director',
-        company: 'Acme Corp',
-        email: 'client@acme.com',
+        company: '',
+        email: '',
         phone: '+1 555 000 0000'
       },
       theme: { ...activeProposal.theme },
@@ -238,30 +296,144 @@ export function App() {
     showToast('Duplicated active proposal.');
   };
 
-  // PDF Export
-  const handleExportPdf = async () => {
-    if (!pagesContainerRef.current) return;
-    setIsExporting(true);
-    setExportProgress(0);
+  // Add new page to current proposal
+  const handleAddPage = (type: PageType) => {
+    let newPage: ProposalPage = {
+      id: `page-${Date.now()}`,
+      pageTitle: 'New Section',
+      type
+    };
 
-    try {
-      const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
-      await exportProposalToPdf(pagesContainerRef.current, filename, (progress) => {
-        setExportProgress(progress);
-      });
-      showToast('Downloaded High-Resolution PDF successfully!');
-    } catch (err: any) {
-      console.error(err);
-      showToast('Downloaded High-Resolution PDF successfully!');
-    } finally {
-      setIsExporting(false);
+    if (type === 'cover') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Cover Page',
+        coverData: {
+          mainTitle: 'Client Proposal Title',
+          subtitle: 'Prepared Exclusively For',
+          clientName: activeProposal.client.name,
+          clientRole: activeProposal.client.role,
+          dateText: 'August 2026',
+          showOverlayImage: true,
+          bgImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200'
+        }
+      };
+    } else if (type === 'category-table') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Services & Scope',
+        tableData: {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+            { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
+          ]
+        }
+      };
+    } else if (type === 'pricing-highlight') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Investment & Terms',
+        pricingData: {
+          highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+          highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+          notesHeader: 'Note',
+          notes: [
+            { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+          ]
+        }
+      };
+    } else if (type === 'deliverables-grid') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Core Features',
+        deliverablesData: {
+          sectionTitle: 'Core Features',
+          items: [
+            { id: 'd1', title: 'Feature 1', description: 'Feature details and deliverables.', badge: 'Included' },
+            { id: 'd2', title: 'Feature 2', description: 'Feature details and deliverables.', badge: 'Premium' }
+          ]
+        }
+      };
+    } else if (type === 'terms-signature') {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Terms & Acceptance',
+        termsData: {
+          legalTerms: 'This proposal represents the entire agreement between parties.',
+          paymentTerms: 'Payment due 15 days from invoice date.',
+          validUntil: '30 Days',
+          agencySignatoryName: activeProposal.agency.name,
+          agencySignatoryTitle: 'Authorized Representative',
+          clientSignatoryName: activeProposal.client.name,
+          clientSignatoryTitle: activeProposal.client.role
+        }
+      };
+    } else {
+      newPage = {
+        ...newPage,
+        pageTitle: 'Executive Summary',
+        freeformData: {
+          heading: 'Executive Summary',
+          content: 'Add your custom proposal narrative here.'
+        }
+      };
     }
+
+    const updatedPages = [...activeProposal.pages, newPage];
+    const updatedProposal = { ...activeProposal, pages: updatedPages, updatedAt: new Date().toISOString() };
+    handleUpdateProposal(updatedProposal);
+    setActivePageIndex(updatedPages.length - 1);
+    showToast(`Added ${type} page`);
   };
 
   // Native Browser Print
-  const handlePrintNative = () => {
+  const handlePrintNative = useCallback(() => {
     window.print();
-  };
+  }, []);
+
+  // One-click PDF Download
+  const handleDownloadPdf = useCallback(async () => {
+    if (!pagesContainerRef.current) return;
+
+    abortControllerRef.current = new AbortController();
+    setIsExporting(true);
+    setIsExportProgressOpen(true);
+    setExportProgressDetail({
+      progress: 0,
+      currentPage: 0,
+      totalPages: activeProposal.pages.length,
+      status: 'rendering'
+    });
+
+    try {
+      const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
+      await exportProposalToPdf(pagesContainerRef.current, filename, {
+        onProgress: (detail) => {
+          setExportProgressDetail(detail);
+          setExportProgress(detail.progress);
+        },
+        signal: abortControllerRef.current.signal
+      });
+      showToast('PDF downloaded successfully!');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        showToast('Export cancelled');
+      } else {
+        console.error(err);
+        showToast('Export failed. Try Print to PDF instead.');
+      }
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setIsExportProgressOpen(false), 1500);
+    }
+  }, [activeProposal]);
+
+  const handleCancelExport = useCallback(() => {
+    abortControllerRef.current?.abort();
+    setIsExportProgressOpen(false);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] flex flex-col font-jakarta overflow-hidden">
@@ -276,7 +448,6 @@ export function App() {
         onUpdateProposalTitle={handleUpdateProposalTitle}
         onOpenShareModal={() => setIsShareModalOpen(true)}
         onSaveNow={handleSaveNow}
-        onExportPdf={handleExportPdf}
         onPrintNative={handlePrintNative}
         zoomLevel={zoomLevel}
         onChangeZoom={setZoomLevel}
@@ -284,6 +455,22 @@ export function App() {
         exportProgress={exportProgress}
         previewModeOnly={previewModeOnly}
         onTogglePreviewMode={() => setPreviewModeOnly(!previewModeOnly)}
+        splitView={splitView}
+        onToggleSplitView={() => setSplitView(!splitView)}
+        onDownloadPdf={handleDownloadPdf}
+      />
+
+      {/* Export Progress Modal */}
+      <ExportProgressModal
+        isOpen={isExportProgressOpen}
+        onCancel={handleCancelExport}
+        progress={exportProgressDetail.progress}
+        currentPage={exportProgressDetail.currentPage}
+        totalPages={exportProgressDetail.totalPages}
+        status={exportProgressDetail.status}
+        errorMessage={exportProgressDetail.errorMessage}
+        estimatedTimeRemaining={exportProgressDetail.estimatedTimeRemaining}
+        isMobile={isMobile}
       />
 
       {/* Share & Import Modal */}
@@ -305,7 +492,7 @@ export function App() {
         )}
 
         {/* Mobile Sidebar Overlay */}
-        {isMobile && sidebarOpen && !previewModeOnly && (
+        {isMobile && sidebarOpen && !previewModeOnly && !splitView && (
           <div
             className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200 lg:hidden"
             onClick={() => setSidebarOpen(false)}
@@ -313,11 +500,85 @@ export function App() {
           />
         )}
 
-        {/* Left Sidebar: Proposal Editor Panel */}
-        {!previewModeOnly && (
+        {/* SPLIT VIEW MODE: Editor + Active Page Preview Side by Side */}
+        {splitView && !previewModeOnly && (
+          <div className="flex h-full w-full overflow-hidden">
+            {/* Left: Editor Panel */}
+            <div className="flex-1 min-w-0 h-full border-r border-slate-200 bg-white no-print">
+              <ProposalEditor
+                proposal={activeProposal}
+                activePageIndex={activePageIndex}
+                onSelectPage={setActivePageIndex}
+                onUpdateProposal={handleUpdateProposal}
+                isMobile={isMobile}
+              />
+            </div>
+
+            {/* Right: Live Preview of Active Page Only */}
+            <div className="flex-1 min-w-0 h-full overflow-y-auto bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isExporting}
+                  className="no-print fixed bottom-6 right-6 z-30 p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800"
+                  aria-label="Download proposal as PDF"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              )}
+              <div
+                ref={pagesContainerRef}
+                className="print-area flex flex-col items-center w-full relative"
+                style={{ transform: `scale(${isMobile ? Math.min(zoomLevel, 0.6) : zoomLevel})`, transformOrigin: 'top center' }}
+              >
+                {activeProposal.pages.map((page, idx) => (
+                  <div
+                    key={page.id}
+                    id={`page-card-${idx}`}
+                    className="relative flex flex-col items-center w-full"
+                    style={idx !== activePageIndex
+                      ? { position: 'absolute', top: 0, left: 0, right: 0, opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }
+                      : undefined}
+                  >
+                    {idx === activePageIndex && (
+                      <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-slate-700" />
+                          Page {idx + 1} of {activeProposal.pages.length} — {page.pageTitle}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                          Live Editing
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="relative w-full max-w-[210mm]">
+                      <ProposalPageCanvas
+                        page={page}
+                        agency={activeProposal.agency}
+                        client={activeProposal.client}
+                        theme={activeProposal.theme}
+                        pageNumber={idx + 1}
+                        totalPages={activeProposal.pages.length}
+                        isSelected={idx === activePageIndex}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NORMAL MODE: Sidebar Editor + Full Preview Stack */}
+        {!splitView && (
           <>
-            {/* Mobile Sidebar Drawer */}
-            {isMobile && (
+            {/* Left Sidebar: Proposal Editor Panel */}
+            {!previewModeOnly && (
+              <>
+                {/* Mobile Sidebar Drawer */}
+                {isMobile && (
               <aside
                 className={`fixed top-16 left-0 bottom-0 z-50 w-[380px] max-w-full bg-white border-r border-slate-200 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
                   sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -341,6 +602,7 @@ export function App() {
                     activePageIndex={activePageIndex}
                     onSelectPage={setActivePageIndex}
                     onUpdateProposal={handleUpdateProposal}
+                    isMobile={isMobile}
                   />
                 </div>
               </aside>
@@ -354,16 +616,17 @@ export function App() {
                   activePageIndex={activePageIndex}
                   onSelectPage={setActivePageIndex}
                   onUpdateProposal={handleUpdateProposal}
+                  isMobile={isMobile}
                 />
               </div>
             )}
-          </>
+</>
         )}
 
-        {/* Right Canvas Area: Live A4 Paginated Preview */}
-        <div className="flex-1 h-full overflow-y-auto bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
+        {/* Right Canvas Area: Live A4 Paginated Preview - Swipe Navigation */}
+        <div className="flex-1 h-full bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
           {/* Mobile: Toggle Sidebar Button */}
-          {isMobile && !previewModeOnly && (
+          {isMobile && !previewModeOnly && !splitView && (
             <button
               type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -384,88 +647,122 @@ export function App() {
             </button>
           )}
 
-          {/* Page Quick Jump Thumbnails bar */}
-          <div className="no-print sticky top-0 z-20 mb-6 bg-white/90 backdrop-blur-md border border-slate-200/80 py-1.5 px-4 rounded-full flex items-center gap-2 shadow-xs max-w-full overflow-x-auto pb-2">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mr-2 hidden sm:inline">
-              Proposal Structure
-            </span>
-            {activeProposal.pages.map((p, idx) => (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setActivePageIndex(idx);
-                  const el = document.getElementById(`page-card-${idx}`);
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap touch-target ${
-                  idx === activePageIndex
-                    ? 'bg-black text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <span className="text-[11px] opacity-70">0{idx + 1}</span>
-                <span className="max-w-[110px] truncate">{p.pageTitle}</span>
-              </button>
-            ))}
-          </div>
+          {/* Mobile: Action FAB */}
+          {isMobile && !previewModeOnly && (
+            <div className="no-print fixed bottom-6 right-6 z-30">
+              {/* FAB Menu Items */}
+              {fabMenuOpen && (
+                <div className="absolute bottom-16 right-0 mb-2 flex flex-col-reverse items-end gap-2 animate-in slide-in-from-bottom-2 duration-200">
+                  <button
+                    type="button"
+                    onClick={() => { handleCreateProposal(); setFabMenuOpen(false); }}
+                    disabled={isExporting}
+                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                    aria-label="New Proposal"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>New Proposal</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { handleDuplicateProposal(); setFabMenuOpen(false); }}
+                    disabled={isExporting}
+                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                    aria-label="Duplicate Proposal"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>Duplicate</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { handleAddPage('category-table'); setFabMenuOpen(false); }}
+                    disabled={isExporting}
+                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                    aria-label="Add Section"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Add Section</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsShareModalOpen(true); setFabMenuOpen(false); }}
+                    disabled={isExporting}
+                    className="p-3 bg-emerald-50 text-emerald-800 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-emerald-100 border border-emerald-200 min-w-[160px] justify-end"
+                    aria-label="Share Proposal"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { handleDownloadPdf(); setFabMenuOpen(false); }}
+                    disabled={isExporting}
+                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                    aria-label="Download PDF"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download PDF</span>
+                  </button>
+                </div>
+              )}
 
-          {/* Printable Container for PDF Export */}
+              {/* Main FAB */}
+              <button
+                type="button"
+                onClick={() => setFabMenuOpen(!fabMenuOpen)}
+                onContextMenu={(e) => { e.preventDefault(); setFabMenuOpen(!fabMenuOpen); }}
+                disabled={isExporting}
+                className={`p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800 ${fabMenuOpen ? 'rotate-45' : ''}`}
+                aria-label={fabMenuOpen ? 'Close actions' : 'Open actions'}
+                aria-expanded={fabMenuOpen}
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* Swipeable Pages Container for PDF Export */}
           <div
             ref={pagesContainerRef}
-            className="print-area flex flex-col items-center space-y-12 transition-transform origin-top w-full"
-            style={{ transform: `scale(${isMobile ? Math.min(zoomLevel, 0.6) : zoomLevel})`, transformOrigin: 'top center' }}
+            className="print-area flex-1 w-full"
           >
-            {activeProposal.pages.map((page, idx) => (
-              <div
-                key={page.id}
-                id={`page-card-${idx}`}
-                className="relative flex flex-col items-center w-full"
-              >
-                {/* Page Number Badge above card */}
-                <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-slate-700" />
-                    Page {idx + 1} of {activeProposal.pages.length} — {page.pageTitle}
-                  </span>
-                  {idx === activePageIndex && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-black bg-slate-200 px-2 py-0.5 rounded-md">
-                      Editing
-                    </span>
-                  )}
-                </div>
-
-                <div className="relative w-full max-w-[210mm]">
-                  <div className="no-print absolute top-2 right-2 z-10 flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActivePageIndex(idx);
-                      }}
-                      className="p-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md text-slate-600 hover:text-black hover:bg-white transition-colors"
-                      title="Edit this page"
-                      aria-label="Edit page"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <ProposalPageCanvas
-                    page={page}
-                    agency={activeProposal.agency}
-                    client={activeProposal.client}
-                    theme={activeProposal.theme}
-                    pageNumber={idx + 1}
-                    totalPages={activeProposal.pages.length}
-                    isSelected={idx === activePageIndex}
-                    onClick={() => setActivePageIndex(idx)}
-                  />
-                </div>
-              </div>
-            ))}
+            <SwipeablePages
+              pages={activeProposal.pages}
+              activePageIndex={activePageIndex}
+              onPageChange={setActivePageIndex}
+              agency={activeProposal.agency}
+              client={activeProposal.client}
+              theme={activeProposal.theme}
+              isMobile={isMobile}
+              zoomLevel={zoomLevel}
+              showPageBadges={!previewModeOnly}
+            />
           </div>
         </div>
+      </>
+    )}
+
+        {/* PREVIEW ONLY MODE: Full width preview with swipe navigation */}
+        {previewModeOnly && (
+          <div className="flex-1 h-full bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start">
+            <div
+              ref={pagesContainerRef}
+              className="print-area flex-1 w-full"
+            >
+              <SwipeablePages
+                pages={activeProposal.pages}
+                activePageIndex={activePageIndex}
+                onPageChange={setActivePageIndex}
+                agency={activeProposal.agency}
+                client={activeProposal.client}
+                theme={activeProposal.theme}
+                isMobile={isMobile}
+                zoomLevel={zoomLevel}
+                showPageBadges={false}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Proposal, ProposalPage, PageType, CategoryTableRow, PricingNote } from '../types';
 import { ThemeSelector } from './ThemeSelector';
+import { SplitEditor } from './SplitEditor';
 import {
   Layers,
   FileText,
@@ -14,7 +15,8 @@ import {
   DollarSign,
   Briefcase,
   Upload,
-  Image
+  Image,
+  GripVertical
 } from 'lucide-react';
 
 interface ProposalEditorProps {
@@ -22,17 +24,31 @@ interface ProposalEditorProps {
   activePageIndex: number;
   onSelectPage: (index: number) => void;
   onUpdateProposal: (updated: Proposal) => void;
+  isMobile?: boolean;
 }
 
 export const ProposalEditor: React.FC<ProposalEditorProps> = ({
   proposal,
   activePageIndex,
   onSelectPage,
-  onUpdateProposal
+  onUpdateProposal,
+  isMobile = false
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'pages' | 'branding' | 'design'>('content');
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [freeformOriginalContent, setFreeformOriginalContent] = useState<string>('');
+  const [freeformTrackedPageId, setFreeformTrackedPageId] = useState<string | null>(null);
 
   const activePage: ProposalPage | undefined = proposal.pages[activePageIndex] || proposal.pages[0];
+
+  // Track original content for freeform pages
+  useEffect(() => {
+    if (activePage?.type === 'freeform' && activePage.id !== freeformTrackedPageId) {
+      setFreeformOriginalContent(activePage.freeformData?.content || '');
+      setFreeformTrackedPageId(activePage.id);
+    }
+  }, [activePage, freeformTrackedPageId]);
 
   // Helper to update active page
   const updateActivePage = (updatedPage: ProposalPage) => {
@@ -175,6 +191,59 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
     onSelectPage(Math.max(0, index - 1));
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (index !== draggedIndex) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const updatedPages = [...proposal.pages];
+    const [draggedPage] = updatedPages.splice(draggedIndex, 1);
+    updatedPages.splice(targetIndex, 0, draggedPage);
+
+    onUpdateProposal({ ...proposal, pages: updatedPages });
+    
+    let newActiveIndex = activePageIndex;
+    if (activePageIndex === draggedIndex) {
+      newActiveIndex = targetIndex;
+    } else if (
+      (draggedIndex < activePageIndex && targetIndex >= activePageIndex) ||
+      (draggedIndex > activePageIndex && targetIndex <= activePageIndex)
+    ) {
+      newActiveIndex = draggedIndex < targetIndex ? activePageIndex - 1 : activePageIndex + 1;
+    }
+    onSelectPage(newActiveIndex);
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="w-full h-full flex flex-col bg-white border-r border-slate-200 text-slate-900">
       {/* Top Tab Bar */}
@@ -189,7 +258,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Content</span>
+          <span className="hidden sm:inline">Edit</span>
         </button>
 
         <button
@@ -202,7 +271,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Pages</span>
+          <span className="hidden sm:inline">Structure</span>
           <span className="text-[10px] bg-slate-200 text-slate-600 rounded-full px-1.5 py-0.5">{proposal.pages.length}</span>
         </button>
 
@@ -216,7 +285,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
           }`}
         >
           <UserCheck className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Client</span>
+          <span className="hidden sm:inline">Settings</span>
         </button>
 
         <button
@@ -611,57 +680,76 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
               </div>
             )}
 
-            {/* FREEFORM TEXT FORM */}
+            {/* FREEFORM TEXT FORM - Side-by-Side Editor */}
             {activePage.type === 'freeform' && (
-              <div>
-                <label className="text-xs font-semibold text-slate-500 block mb-1">
-                  Custom Page Content
-                </label>
-                <textarea
-                  rows={12}
-                  value={activePage.freeformData?.content || ''}
-                  onChange={(e) =>
-                    updateActivePage({
-                      ...activePage,
-                      freeformData: {
-                        heading: activePage.freeformData?.heading || 'Executive Summary',
-                        content: e.target.value
-                      }
-                    })
-                  }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none font-mono"
-                />
-              </div>
+              <SplitEditor
+                originalContent={freeformOriginalContent}
+                editedContent={activePage.freeformData?.content || ''}
+                onChange={(content) =>
+                  updateActivePage({
+                    ...activePage,
+                    freeformData: {
+                      heading: activePage.freeformData?.heading || 'Executive Summary',
+                      content
+                    }
+                  })
+                }
+                heading="Custom Page Content"
+                isMobile={isMobile}
+              />
             )}
           </div>
         )}
 
-        {/* TAB 2: PAGES MANAGER */}
+        {/* TAB 2: STRUCTURE MANAGER */}
         {activeTab === 'pages' && (
           <div className="space-y-4">
             <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-              Proposal Structure
+              Page Structure
             </h4>
 
             <div className="space-y-2">
               {proposal.pages.map((p, idx) => {
                 const isSelected = idx === activePageIndex;
+                const isDragging = draggedIndex === idx;
+                const isDragOver = dragOverIndex === idx;
                 return (
                   <div
                     key={p.id}
                     onClick={() => onSelectPage(idx)}
-                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                    onDragStart={(e) => handleDragStart(e, idx)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, idx)}
+                    draggable
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all relative ${
                       isSelected
                         ? 'bg-slate-100 border-black text-slate-900 font-bold'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
+                    } ${isDragging ? 'opacity-50 ring-2 ring-black' : ''} ${isDragOver ? 'bg-slate-100 border-blue-500' : ''}`}
+                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-md bg-white border border-slate-200 text-[11px] font-bold flex items-center justify-center text-slate-900">
+                    <button
+                      type="button"
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      draggable
+                      className="p-1 text-slate-400 hover:text-slate-900 flex-shrink-0"
+                      aria-label="Drag to reorder"
+                      title="Drag to reorder"
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="w-6 h-6 rounded-md bg-white border border-slate-200 text-[11px] font-bold flex items-center justify-center text-slate-900 flex-shrink-0">
                         0{idx + 1}
                       </span>
-                      <div>
-                        <p className="text-xs font-semibold leading-tight">{p.pageTitle}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold leading-tight truncate">{p.pageTitle}</p>
                         <p className="text-[10px] text-slate-400 uppercase font-medium">
                           {p.type}
                         </p>

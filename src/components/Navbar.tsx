@@ -16,7 +16,11 @@ import {
   Pencil,
   Save,
   Menu,
-  X
+  X,
+  Layout,
+  Columns,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -29,7 +33,7 @@ interface NavbarProps {
   onUpdateProposalTitle: (proposalId: string, title: string) => void;
   onOpenShareModal: () => void;
   onSaveNow: () => void;
-  onExportPdf: () => void;
+  onDownloadPdf: () => void;
   onPrintNative: () => void;
   zoomLevel: number;
   onChangeZoom: (newZoom: number) => void;
@@ -37,6 +41,8 @@ interface NavbarProps {
   exportProgress: number;
   previewModeOnly: boolean;
   onTogglePreviewMode: () => void;
+  splitView: boolean;
+  onToggleSplitView: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -49,14 +55,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   onUpdateProposalTitle,
   onOpenShareModal,
   onSaveNow,
-  onExportPdf,
+  onDownloadPdf,
   onPrintNative,
   zoomLevel,
   onChangeZoom,
   isExporting,
   exportProgress,
   previewModeOnly,
-  onTogglePreviewMode
+  onTogglePreviewMode,
+  splitView,
+  onToggleSplitView
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
@@ -300,6 +308,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
+          onClick={onToggleSplitView}
+          className={`px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all ${
+            splitView
+              ? 'bg-black text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+          }`}
+          title={splitView ? 'Exit Split View' : 'Enter Split View (Editor + Live Preview)'}
+        >
+          {splitView ? (
+            <>
+              <Minimize2 className="w-3.5 h-3.5" />
+              Exit Split
+            </>
+          ) : (
+            <>
+              <Layout className="w-3.5 h-3.5" />
+              <Columns className="w-3.5 h-3.5" />
+              Split View
+            </>
+          )}
+        </button>
+
+        <div className="h-4 w-[1px] bg-slate-200 mx-1" />
+
+        <button
+          type="button"
           onClick={onTogglePreviewMode}
           className={`px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all ${
             previewModeOnly
@@ -356,12 +390,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
-          onClick={onExportPdf}
+          onClick={onDownloadPdf}
           disabled={isExporting}
           className="px-3 sm:px-4 py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
         >
           <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{isExporting ? `Exporting (${exportProgress}%)...` : 'Export PDF'}</span>
+          <span className="hidden sm:inline">{isExporting ? `Exporting (${exportProgress}%)...` : 'Download PDF'}</span>
         </button>
       </div>
 
@@ -397,6 +431,31 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <div className="h-5 w-[1px] bg-slate-200 mx-2 flex-shrink-0" />
 
+            <button
+              type="button"
+              onClick={onToggleSplitView}
+              className={`px-3 py-2 rounded text-sm font-medium flex items-center gap-2 transition-all flex-1 justify-center ${
+                splitView
+                  ? 'bg-black text-white'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+              }`}
+            >
+              {splitView ? (
+                <>
+                  <Minimize2 className="w-4 h-4" />
+                  Exit Split View
+                </>
+              ) : (
+                <>
+                  <Layout className="w-4 h-4" />
+                  <Columns className="w-4 h-4" />
+                  Split View
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-3 rounded-lg">
             <button
               type="button"
               onClick={onTogglePreviewMode}
@@ -451,12 +510,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               type="button"
-              onClick={() => { onExportPdf(); setMobileMenuOpen(false); }}
+              onClick={() => { onDownloadPdf(); setMobileMenuOpen(false); }}
               disabled={isExporting}
               className="py-3 bg-black text-white rounded-lg hover:bg-slate-800 text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
-              {isExporting ? `Exporting...` : 'Export PDF'}
+              {isExporting ? `Exporting...` : 'Download PDF'}
             </button>
           </div>
         </div>
