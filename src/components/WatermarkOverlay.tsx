@@ -19,7 +19,7 @@ export const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({
     theme.headerLogoUrl ||
     agency.logoUrl ||
     agency.footerLogoUrl ||
-    "/SD_LOGO.png";
+    "/SDLOGO.png";
 
   const watermarkText = theme.watermarkText || agency.name || "CONFIDENTIAL";
   const opacity = theme.watermarkOpacity ?? 0.06;
@@ -33,7 +33,7 @@ export const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({
           className="w-3/4 max-w-xl max-h-[65%] object-contain transition-opacity"
           style={{ opacity: opacity }}
           onError={(e) => {
-            (e.target as HTMLImageElement).src = "/SD_LOGO.png";
+            (e.target as HTMLImageElement).src = "/SD-LOGO.png";
           }}
         />
       ) : (

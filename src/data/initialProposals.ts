@@ -9,7 +9,7 @@ export const socialDrishtiProposal: Proposal = {
     name: "SOCIAL DRISHTI",
     tagline: "LOOKING BEYOND THE OBVIOUS",
     logoUrl: "/black-sd-logo.png",
-    footerLogoUrl: "/SD_LOGO.png",
+    footerLogoUrl: "/SD-LOGO.png",
     email: "info@socialdrishti.com",
     phone: "+91 98765 43210",
     website: "www.socialdrishti.com",
@@ -34,7 +34,7 @@ export const socialDrishtiProposal: Proposal = {
     customFooterText: "",
     showWatermark: true,
     watermarkType: "logo",
-    watermarkLogoUrl: "/SD_LOGO.png",
+    watermarkLogoUrl: "/SD-LOGO.png",
     watermarkOpacity: 0.06,
   },
   pages: [

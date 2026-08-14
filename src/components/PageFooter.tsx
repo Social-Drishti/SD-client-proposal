@@ -31,7 +31,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
             alt="Footer Logo"
             className="h-8 max-w-[140px] object-contain"
             referrerPolicy="no-referrer"
-            onError={() => setLogoSrc("/SD_LOGO.png")}
+            onError={() => setLogoSrc("/SD-LOGO.png")}
           />
         </div>
       ) : null}
