@@ -74,7 +74,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           style={{ backgroundColor: theme.accentColor }}
         />
         <h2
-          className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+          className="text-2xl sm:text-3xl font-bold tracking-tight"
           style={{ color: theme.primaryColor }}
         >
           {pageTitle}

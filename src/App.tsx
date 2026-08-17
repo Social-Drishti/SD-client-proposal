@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Proposal, PageType, ProposalPage } from './types';
 import { ProposalProvider, useProposalContext } from './context/ProposalContext';
 import { ViewProvider, useViewContext } from './context/ViewContext';
@@ -9,10 +9,46 @@ import { SwipeablePages } from './components/SwipeablePages';
 import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
 import { ExportProgressModal } from './components/ExportProgressModal';
-import { exportProposalToPdf, ExportProgressDetail } from './lib/pdfGenerator';
+import { PrintLayout } from './components/PrintLayout';
+import { exportProposalToPdf, exportProposalToPdfViaServer, ExportProgressDetail } from './lib/pdfGenerator';
 import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
 function AppContent() {
+  const isPrintRoute = window.location.pathname.startsWith('/print/');
+  const [printProposal, setPrintProposal] = useState<Proposal | null>(null);
+
+  useEffect(() => {
+    if (isPrintRoute) {
+      const hash = window.location.hash;
+      if (hash && (hash.includes('#proposal=') || hash.includes('#share='))) {
+        try {
+          const encodedData = hash.replace('#proposal=', '').replace('#share=', '');
+          const jsonString = decodeURIComponent(encodedData);
+          const parsed: any = JSON.parse(jsonString);
+          if (parsed && parsed.title && parsed.pages) {
+            setPrintProposal(parsed);
+          }
+        } catch (e) {
+          console.error('Failed to parse proposal for print route', e);
+        }
+      }
+    }
+  }, [isPrintRoute]);
+
+  if (isPrintRoute) {
+    if (!printProposal) {
+      return (
+        <div className="min-h-screen bg-white flex items-center justify-center font-jakarta">
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent mx-auto mb-4" />
+            <p className="text-slate-600">Loading proposal for print...</p>
+          </div>
+        </div>
+      );
+    }
+    return <PrintLayout proposal={printProposal} />;
+  }
+
   const {
     state,
     activeProposal,
@@ -346,16 +382,58 @@ function AppContent() {
     showToast(`Added ${type} page`);
   }, [activeProposal, ctxAddPage, showToast]);
 
-  // Native Browser Print
+  // Native Browser Print - Opens PrintLayout in a popup so ALL pages are printed
   const handlePrintNative = useCallback(() => {
-    window.print();
-  }, []);
+    const proposalJson = JSON.stringify(activeProposal);
+    const encoded = encodeURIComponent(proposalJson);
+    const printUrl = `${window.location.origin}/print/native#proposal=${encoded}`;
+    const popup = window.open(printUrl, '_blank', 'width=900,height=1200,scrollbars=yes');
 
-  // One-click PDF Download
+    if (!popup) {
+      showToast('Pop-up blocked — please allow pop-ups and try again');
+      return;
+    }
+
+    const printTimeout = setTimeout(() => {
+      try {
+        popup.print();
+      } catch (e) {
+        console.error('Print failed:', e);
+      }
+    }, 8000);
+
+    popup.addEventListener('load', () => {
+      const checkReady = setInterval(() => {
+        if (popup.document.querySelector('[data-print-ready="true"]')) {
+          clearInterval(checkReady);
+          clearTimeout(printTimeout);
+          setTimeout(() => {
+            try {
+              popup.print();
+            } catch (e) {
+              console.error('Print failed:', e);
+            }
+          }, 500);
+        }
+      }, 200);
+
+      setTimeout(() => {
+        clearInterval(checkReady);
+        clearTimeout(printTimeout);
+        try {
+          popup.print();
+        } catch (e) {
+          console.error('Print fallback failed:', e);
+        }
+      }, 15000);
+    });
+  }, [activeProposal, showToast]);
+
+  // One-click PDF Download (Server-first → Native print fallback → html2canvas last resort)
   const handleDownloadPdf = useCallback(async () => {
-    if (!pagesContainerRef.current) return;
-
     abortControllerRef.current = new AbortController();
+    const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
+
     startExport({
       progress: 0,
       currentPage: 0,
@@ -365,26 +443,50 @@ function AppContent() {
     setIsExportProgressOpen(true);
 
     try {
-      const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
-      await exportProposalToPdf(pagesContainerRef.current, filename, {
-        onProgress: (detail) => {
-          updateProgress(detail);
-        },
-        signal: abortControllerRef.current.signal
+      // Primary: Server-side Puppeteer export (best quality, preserves layout exactly)
+      await exportProposalToPdfViaServer(activeProposal, filename, {
+        onProgress: (detail) => updateProgress(detail),
+        signal: abortControllerRef.current.signal,
+        apiBaseUrl: '',
       });
       showToast('PDF downloaded successfully!');
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (serverErr: any) {
+      if (serverErr.name === 'AbortError') {
         showToast('Export cancelled');
-      } else {
-        console.error(err);
-        showToast('Export failed. Try Print to PDF instead.');
+        return;
+      }
+      console.warn('Server export failed, falling back to native browser print:', serverErr.message);
+
+      try {
+        // Fallback 1: Native browser print dialog
+        // Close the export modal FIRST so it doesn't appear in the print preview
+        setIsExportProgressOpen(false);
+        cancelExport();
+
+        showToast('Opening Print dialog — select "Save as PDF" for best results');
+        handlePrintNative();
+        return;
+      } catch (printErr: any) {
+        if (printErr.name === 'AbortError') {
+          showToast('Export cancelled');
+          return;
+        }
+        console.error('Native print failed:', printErr);
+        // Fallback 2 (LAST RESORT): Client-side html2canvas + jsPDF
+        // Known limitations: Flex/Grid layout issues, font rendering, CSS transform handling
+        showToast('Falling back to client-side renderer (lower quality)...');
+        if (!pagesContainerRef.current) throw new Error('Pages container not found');
+        await exportProposalToPdf(pagesContainerRef.current, filename, {
+          onProgress: (detail) => updateProgress(detail),
+          signal: abortControllerRef.current.signal,
+        });
+        showToast('PDF downloaded (client-side last resort)');
       }
     } finally {
       cancelExport();
       setTimeout(() => setIsExportProgressOpen(false), 1500);
     }
-  }, [activeProposal, startExport, updateProgress, showToast]);
+  }, [activeProposal, startExport, updateProgress, showToast, handlePrintNative]);
 
   const handleCancelExport = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -436,6 +538,8 @@ function AppContent() {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onImportProposal={handleImportProposal}
+        onDownloadPdf={handleDownloadPdf}
+        isExporting={isExporting}
       />
 
       {/* Main Studio Body */}
@@ -451,7 +555,7 @@ function AppContent() {
         {/* Mobile Sidebar Overlay */}
         {isMobile && sidebarOpen && !previewModeOnly && !splitView && (
           <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200 lg:hidden"
+            className="no-print fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200 lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -537,7 +641,7 @@ function AppContent() {
                 {/* Mobile Sidebar Drawer */}
                 {isMobile && (
               <aside
-                className={`fixed top-16 left-0 bottom-0 z-50 w-[380px] max-w-full bg-white border-r border-slate-200 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+                className={`no-print fixed top-16 left-0 bottom-0 z-50 w-[380px] max-w-full bg-white border-r border-slate-200 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
                   sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
               >

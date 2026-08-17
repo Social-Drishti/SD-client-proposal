@@ -39,7 +39,7 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
         <div className="grid grid-cols-12 gap-4 sm:gap-6 pb-3 mb-4 border-b border-slate-200">
           <div className="col-span-12 sm:col-span-4">
             <h3
-              className="text-base sm:text-lg font-black italic tracking-wide uppercase"
+              className="text-base sm:text-lg font-bold italic tracking-wide uppercase"
               style={{ color: theme.primaryColor }}
             >
               {categoryHeader}
@@ -47,7 +47,7 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
           </div>
           <div className="col-span-12 sm:col-span-8 mt-2 sm:mt-0">
             <h3
-              className="text-base sm:text-lg font-black italic tracking-wide uppercase"
+              className="text-base sm:text-lg font-bold italic tracking-wide uppercase"
               style={{ color: theme.primaryColor }}
             >
               {detailsHeader}

@@ -10,7 +10,8 @@ import {
   X,
   FileJson,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 
 interface ShareModalProps {
@@ -18,13 +19,17 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportProposal: (importedProposal: Proposal) => void;
+  onDownloadPdf?: () => void;
+  isExporting?: boolean;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
   proposal,
   isOpen,
   onClose,
-  onImportProposal
+  onImportProposal,
+  onDownloadPdf,
+  isExporting = false
 }) => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
@@ -139,7 +144,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
@@ -256,8 +261,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {activeTab === 'json' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600">
-                Download a JSON backup file or copy the raw proposal data to transfer between accounts:
+                Download your proposal as a high-quality PDF or export the raw data:
               </p>
+
+              {onDownloadPdf && (
+                <button
+                  onClick={() => { onDownloadPdf(); onClose(); }}
+                  disabled={isExporting}
+                  className="w-full p-3 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  <FileText className="w-4 h-4" />
+                  {isExporting ? 'Exporting PDF...' : 'Download PDF'}
+                </button>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <button

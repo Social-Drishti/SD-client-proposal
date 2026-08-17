@@ -43,7 +43,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({
               <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-1">
                   <span
-                    className="text-xs font-black uppercase tracking-wider"
+                    className="text-xs font-bold uppercase tracking-wider"
                     style={{ color: theme.primaryColor }}
                   >
                     {step.phase}

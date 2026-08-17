@@ -432,7 +432,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onOpenShareModal}
-          className="hidden sm:px-3 sm:py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all"
+          className="hidden sm:flex sm:px-3 sm:py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg items-center gap-1.5 transition-all"
           title="Share proposal via link, JSON, or import"
         >
           <Share2 className="w-3.5 h-3.5 text-emerald-700" />
@@ -442,7 +442,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onPrintNative}
-          className="hidden sm:px-3 sm:py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 flex items-center gap-2 transition-all"
+          className="hidden sm:flex sm:px-3 sm:py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 items-center gap-2 transition-all"
           title="Print to PDF via Browser"
         >
           <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -453,7 +453,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           type="button"
           onClick={onDownloadPdf}
           disabled={isExporting}
-          className="hidden sm:px-3 sm:px-4 sm:py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-all disabled:opacity-50"
+          className="hidden sm:flex sm:px-3 sm:px-4 sm:py-2 text-xs font-semibold bg-black text-white rounded-lg hover:bg-slate-800 items-center gap-2 transition-all disabled:opacity-50"
         >
           <Download className="w-3.5 h-3.5" />
           <span>{isExporting ? `Exporting (${exportProgress}%)...` : 'Download PDF'}</span>

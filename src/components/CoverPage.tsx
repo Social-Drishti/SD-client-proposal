@@ -43,7 +43,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               }}
             />
           ) : (
-            <span className="text-sm sm:text-base font-extrabold tracking-wider text-slate-800 uppercase">
+            <span className="text-sm sm:text-base font-bold tracking-wider text-slate-800 uppercase">
               {agency.name}
             </span>
           )}
@@ -67,7 +67,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
           <div className="flex flex-col justify-center">
             <h2
-              className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15]"
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15]"
               style={{ color: theme.primaryColor }}
             >
               {mainTitle}
@@ -80,7 +80,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
             PREPARED FOR
           </p>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             {clientName}
           </h3>
           <p className="text-sm sm:text-base font-medium text-slate-600 mt-1">
@@ -100,7 +100,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
             PREPARED BY
           </p>
-          <p className="text-sm font-extrabold text-slate-900">{agency.name}</p>
+          <p className="text-sm font-bold text-slate-900">{agency.name}</p>
           {agency.tagline && (
             <p className="text-xs font-semibold text-slate-500 mt-0.5">
               {agency.tagline}

@@ -36,7 +36,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
         {/* Highlighted Price Pill Container */}
         <div className="my-4 sm:my-6">
           <div className="bg-[#0b1329] text-white rounded-xl sm:rounded-2xl py-4 sm:py-5 px-6 sm:px-8 text-center shadow-md border border-slate-800">
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
               {highlightTitle}
             </h3>
           </div>
@@ -50,7 +50,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
         {/* Note Section */}
         {notes.length > 0 && (
           <div className="mt-6 sm:mt-10">
-            <h4 className="text-base sm:text-lg font-bold text-red-600 mb-2 sm:mb-3">
+            <h4 className="text-base sm:text-lg font-semibold text-red-600 mb-2 sm:mb-3">
               {notesHeader}
             </h4>
             <div className="space-y-2 sm:space-y-3">
