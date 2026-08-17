@@ -109,11 +109,17 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         </div>
 
         <div className="text-right sm:text-right">
-          <p className="text-xs font-semibold text-slate-500">
-            {agency.website || agency.email}
-          </p>
-          {agency.phone && (
-            <p className="text-xs text-slate-400 mt-0.5">{agency.phone}</p>
+          {theme.customFooterText ? (
+            <p className="text-xs font-semibold text-slate-500">{theme.customFooterText}</p>
+          ) : (
+            <>
+              <p className="text-xs font-semibold text-slate-500">
+                {agency.website || agency.email}
+              </p>
+              {agency.phone && (
+                <p className="text-xs text-slate-400 mt-0.5">{agency.phone}</p>
+              )}
+            </>
           )}
         </div>
       </div>

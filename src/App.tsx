@@ -10,7 +10,7 @@ import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
 import { ExportProgressModal } from './components/ExportProgressModal';
 import { PrintLayout } from './components/PrintLayout';
-import { exportProposalToPdf, exportProposalToPdfViaServer, ExportProgressDetail } from './lib/pdfGenerator';
+import { exportProposalToPdf, ExportProgressDetail } from './lib/pdfGenerator';
 import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
 function AppContent() {
@@ -429,7 +429,7 @@ function AppContent() {
     });
   }, [activeProposal, showToast]);
 
-  // One-click PDF Download (Server-first → Native print fallback → html2canvas last resort)
+  // Direct client-side PDF download (html2canvas + jsPDF)
   const handleDownloadPdf = useCallback(async () => {
     abortControllerRef.current = new AbortController();
     const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
@@ -443,50 +443,25 @@ function AppContent() {
     setIsExportProgressOpen(true);
 
     try {
-      // Primary: Server-side Puppeteer export (best quality, preserves layout exactly)
-      await exportProposalToPdfViaServer(activeProposal, filename, {
+      // Direct client-side export - no server, no popup
+      if (!pagesContainerRef.current) throw new Error('Pages container not found');
+      await exportProposalToPdf(pagesContainerRef.current, filename, {
         onProgress: (detail) => updateProgress(detail),
         signal: abortControllerRef.current.signal,
-        apiBaseUrl: '',
       });
       showToast('PDF downloaded successfully!');
-    } catch (serverErr: any) {
-      if (serverErr.name === 'AbortError') {
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
         showToast('Export cancelled');
         return;
       }
-      console.warn('Server export failed, falling back to native browser print:', serverErr.message);
-
-      try {
-        // Fallback 1: Native browser print dialog
-        // Close the export modal FIRST so it doesn't appear in the print preview
-        setIsExportProgressOpen(false);
-        cancelExport();
-
-        showToast('Opening Print dialog — select "Save as PDF" for best results');
-        handlePrintNative();
-        return;
-      } catch (printErr: any) {
-        if (printErr.name === 'AbortError') {
-          showToast('Export cancelled');
-          return;
-        }
-        console.error('Native print failed:', printErr);
-        // Fallback 2 (LAST RESORT): Client-side html2canvas + jsPDF
-        // Known limitations: Flex/Grid layout issues, font rendering, CSS transform handling
-        showToast('Falling back to client-side renderer (lower quality)...');
-        if (!pagesContainerRef.current) throw new Error('Pages container not found');
-        await exportProposalToPdf(pagesContainerRef.current, filename, {
-          onProgress: (detail) => updateProgress(detail),
-          signal: abortControllerRef.current.signal,
-        });
-        showToast('PDF downloaded (client-side last resort)');
-      }
+      console.error('Client-side export failed:', err);
+      showToast('Export failed: ' + err.message);
     } finally {
       cancelExport();
       setTimeout(() => setIsExportProgressOpen(false), 1500);
     }
-  }, [activeProposal, startExport, updateProgress, showToast, handlePrintNative]);
+  }, [activeProposal, startExport, updateProgress, showToast]);
 
   const handleCancelExport = useCallback(() => {
     abortControllerRef.current?.abort();

@@ -370,6 +370,22 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ theme, onChange })
                   className="w-full mt-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] text-slate-700 focus:border-black focus:outline-none"
                 />
               </div>
+
+              <div className="pt-2 border-t border-slate-200/60">
+                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1 mb-1.5">
+                  <span>Custom Footer Text</span>
+                </label>
+                <p className="text-[10px] text-slate-500 mb-2 leading-relaxed">
+                  Custom text shown on the right side of the footer. If empty, agency info is displayed.
+                </p>
+                <input
+                  type="text"
+                  value={theme.customFooterText || ''}
+                  onChange={(e) => onChange({ ...theme, customFooterText: e.target.value })}
+                  placeholder="e.g. Confidential — 2026"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] text-slate-700 focus:border-black focus:outline-none"
+                />
+              </div>
             </div>
           )}
         </div>

@@ -21,9 +21,11 @@ export const PageFooter: React.FC<PageFooterProps> = ({
     theme.footerLogoUrl || agency.footerLogoUrl || "/SD-LOGO.png";
   const [logoSrc, setLogoSrc] = React.useState(footerLogoUrl);
 
+  const customFooterText = theme.customFooterText || '';
+
   return (
     <div className="relative z-10 pt-2 sm:pt-3 mt-auto flex items-center justify-between border-t border-slate-100 min-h-[28px] sm:min-h-[32px]">
-      {/* Footer displays strictly the uploaded logo only - no text content */}
+      {/* Left: Footer Logo */}
       {footerLogoUrl ? (
         <div className="flex items-center gap-2">
           <img
@@ -35,6 +37,23 @@ export const PageFooter: React.FC<PageFooterProps> = ({
           />
         </div>
       ) : null}
+
+      {/* Right: Agency Info or Custom Text */}
+      <div className="text-right flex-shrink-0 ml-auto">
+        {customFooterText ? (
+          <p className="text-[10px] font-semibold text-slate-500">{customFooterText}</p>
+        ) : (
+          <>
+            <p className="text-[10px] font-bold text-slate-700">{agency.name}</p>
+            {agency.tagline && (
+              <p className="text-[9px] font-medium text-slate-400 mt-0.5">{agency.tagline}</p>
+            )}
+            {(agency.website || agency.email) && (
+              <p className="text-[9px] text-slate-400 mt-0.5">{agency.website || agency.email}</p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
