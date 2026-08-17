@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProposalAgency, ProposalTheme, PricingPageData, TablePageData } from '../types';
+import { ProposalAgency, ProposalTheme, PricingPageData } from '../types';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
 import { WatermarkOverlay } from './WatermarkOverlay';
@@ -8,8 +8,7 @@ interface PricingPageProps {
   pageTitle: string;
   agency: ProposalAgency;
   theme: ProposalTheme;
-  pricingData?: PricingPageData;
-  tableData?: TablePageData;
+  data: PricingPageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -18,16 +17,14 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   pageTitle,
   agency,
   theme,
-  pricingData,
-  tableData,
+  data,
   pageNumber,
   totalPages
 }) => {
-  const rows = tableData?.rows || [];
-  const highlightTitle = pricingData?.highlightBoxTitle || 'Monthly – INR 1,00,000 + 18% GST';
-  const highlightSubtitle = pricingData?.highlightBoxSubtitle || '(Minimum Lock-in Period 6 Months)';
-  const notesHeader = pricingData?.notesHeader || 'Note';
-  const notes = pricingData?.notes || [];
+  const highlightTitle = data.highlightBoxTitle || 'Monthly – INR 1,00,000 + 18% GST';
+  const highlightSubtitle = data.highlightBoxSubtitle || '(Minimum Lock-in Period 6 Months)';
+  const notesHeader = data.notesHeader || 'Note';
+  const notes = data.notes || [];
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
@@ -35,25 +32,6 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Top Header */}
         <PageHeader pageTitle={pageTitle} agency={agency} theme={theme} />
-
-        {/* Optional Format/Revision Table Rows */}
-        {rows.length > 0 && (
-          <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
-            {rows.map((row) => (
-              <div key={row.id} className="grid grid-cols-12 gap-4 sm:gap-6 items-start">
-                <div className="col-span-12 sm:col-span-4">
-                  <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-                    {row.category}
-                  </h4>
-                </div>
-                <div className="col-span-12 sm:col-span-8 mt-1 sm:mt-0 text-slate-700 text-xs sm:text-sm font-medium">
-                  {row.details}
-                </div>
-              </div>
-            ))}
-            <div className="w-full h-[1px] bg-slate-200 mt-4 sm:mt-6" />
-          </div>
-        )}
 
         {/* Highlighted Price Pill Container */}
         <div className="my-4 sm:my-6">

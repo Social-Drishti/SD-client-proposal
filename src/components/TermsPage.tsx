@@ -9,7 +9,7 @@ interface TermsPageProps {
   agency: ProposalAgency;
   client: ProposalClient;
   theme: ProposalTheme;
-  data?: TermsPageData;
+  data: TermsPageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -23,12 +23,12 @@ export const TermsPage: React.FC<TermsPageProps> = ({
   pageNumber,
   totalPages
 }) => {
-  const legalTerms = data?.legalTerms || 'This proposal constitutes a formal statement of work. Work shall commence upon receipt of the initial deposit and signed agreement. Either party may terminate with 30 days written notice.';
-  const paymentTerms = data?.paymentTerms || 'Invoices are payable within 15 days of issue. Late payments incur a 1.5% monthly service fee.';
-  const agencySignatoryName = data?.agencySignatoryName || agency.name;
-  const agencySignatoryTitle = data?.agencySignatoryTitle || 'Authorized Representative';
-  const clientSignatoryName = data?.clientSignatoryName || client.name;
-  const clientSignatoryTitle = data?.clientSignatoryTitle || client.role;
+  const legalTerms = data.legalTerms || 'This proposal constitutes a formal statement of work. Work shall commence upon receipt of the initial deposit and signed agreement. Either party may terminate with 30 days written notice.';
+  const paymentTerms = data.paymentTerms || 'Invoices are payable within 15 days of issue. Late payments incur a 1.5% monthly service fee.';
+  const agencySignatoryName = data.agencySignatoryName || agency.name;
+  const agencySignatoryTitle = data.agencySignatoryTitle || 'Authorized Representative';
+  const clientSignatoryName = data.clientSignatoryName || client.name;
+  const clientSignatoryTitle = data.clientSignatoryTitle || client.role;
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">

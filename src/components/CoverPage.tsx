@@ -9,7 +9,7 @@ import {
 interface CoverPageProps {
   agency: ProposalAgency;
   client: ProposalClient;
-  data?: CoverPageData;
+  data: CoverPageData;
   theme: ProposalTheme;
 }
 
@@ -19,10 +19,10 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   data,
   theme,
 }) => {
-  const mainTitle = data?.mainTitle || "Client Proposal";
-  const clientName = data?.clientName || client.name;
-  const clientRole = data?.clientRole || client.role;
-  const dateText = data?.dateText || "2026";
+  const mainTitle = data.mainTitle || "Client Proposal";
+  const clientName = data.clientName || client.name;
+  const clientRole = data.clientRole || client.role;
+  const dateText = data.dateText || "2026";
   const logoUrl = theme.headerLogoUrl || agency.logoUrl || "/black-sd-logo.png";
 
   return (

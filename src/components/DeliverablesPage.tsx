@@ -9,7 +9,7 @@ interface DeliverablesPageProps {
   pageTitle: string;
   agency: ProposalAgency;
   theme: ProposalTheme;
-  data?: DeliverablesPageData;
+  data: DeliverablesPageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -22,7 +22,7 @@ export const DeliverablesPage: React.FC<DeliverablesPageProps> = ({
   pageNumber,
   totalPages
 }) => {
-  const items = data?.items || [];
+  const items = data.items || [];
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">

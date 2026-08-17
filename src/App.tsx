@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { Proposal, PageType, ProposalPage } from './types';
-import { initialProposalsList, socialDrishtiProposal } from './data/initialProposals';
+import { ProposalProvider, useProposalContext } from './context/ProposalContext';
+import { ViewProvider, useViewContext } from './context/ViewContext';
+import { ExportProvider, useExportContext } from './context/ExportContext';
 import { ProposalPageCanvas } from './components/ProposalPageCanvas';
 import { ProposalEditor } from './components/ProposalEditor';
 import { SwipeablePages } from './components/SwipeablePages';
@@ -10,129 +12,60 @@ import { ExportProgressModal } from './components/ExportProgressModal';
 import { exportProposalToPdf, ExportProgressDetail } from './lib/pdfGenerator';
 import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
-export function App() {
-  // Load proposals from localStorage or fallback to initial templates
-  const [proposals, setProposals] = useState<Proposal[]>(() => {
-    try {
-      const saved = localStorage.getItem('proposa_proposals_v1');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-        console.error('Saved proposals is not an array');
-      }
-    } catch (e) {
-      console.error('Failed to parse saved proposals', e);
-    }
-    return initialProposalsList;
-  });
+function AppContent() {
+  const {
+    state,
+    activeProposal,
+    createProposal: ctxCreateProposal,
+    updateProposal: ctxUpdateProposal,
+    deleteProposal: ctxDeleteProposal,
+    selectProposal: ctxSelectProposal,
+    setActivePageIndex: ctxSetActivePageIndex,
+    addPage: ctxAddPage,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    importProposal: ctxImportProposal,
+  } = useProposalContext();
 
-  const [activeProposalId, setActiveProposalId] = useState<string>(
-    proposals[0]?.id || socialDrishtiProposal.id
-  );
+  const {
+    zoomLevel,
+    splitView,
+    previewModeOnly,
+    sidebarOpen,
+    isMobile,
+    fabMenuOpen,
+    setZoomLevel,
+    toggleSplitView,
+    togglePreviewMode,
+    setSidebarOpen,
+    setFabMenuOpen,
+  } = useViewContext();
 
-  const [activePageIndex, setActivePageIndex] = useState<number>(0);
-  const [zoomLevel, setZoomLevel] = useState<number>(0.85);
-  const [previewModeOnly, setPreviewModeOnly] = useState<boolean>(false);
-  const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [exportProgress, setExportProgress] = useState<number>(0);
-  const [exportProgressDetail, setExportProgressDetail] = useState<ExportProgressDetail>({
-    progress: 0,
-    currentPage: 0,
-    totalPages: 0,
-    status: 'idle'
-  });
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
-  const [isExportProgressOpen, setIsExportProgressOpen] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [splitView, setSplitView] = useState<boolean>(false);
-  const [fabMenuOpen, setFabMenuOpen] = useState<boolean>(false);
+  const {
+    isExporting,
+    exportProgress,
+    exportProgressDetail,
+    abortController,
+    startExport,
+    cancelExport,
+    updateProgress,
+  } = useExportContext();
 
   const pagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Check mobile viewport
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      }
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Active proposal object
-  const activeProposal =
-    proposals.find((p) => p.id === activeProposalId) || proposals[0] || socialDrishtiProposal;
-
-  // Persist proposals in localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('proposa_proposals_v1', JSON.stringify(proposals));
-    } catch (e) {
-      console.error('Failed to save proposals to localStorage', e);
-    }
-  }, [proposals]);
-
-  // Check URL hash on initial load for shared proposal links
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && (hash.includes('#proposal=') || hash.includes('#share='))) {
-      try {
-        const encodedData = hash.replace('#proposal=', '').replace('#share=', '');
-        const jsonString = decodeURIComponent(encodedData);
-        const parsed: Proposal = JSON.parse(jsonString);
-
-        if (parsed && parsed.title && parsed.pages) {
-          const sharedProposal: Proposal = {
-            ...parsed,
-            id: `shared-${Date.now()}`,
-            title: parsed.title + ' (Shared)',
-            updatedAt: new Date().toISOString()
-          };
-
-          setProposals((prev) => [sharedProposal, ...prev]);
-          setActiveProposalId(sharedProposal.id);
-          showToast(`Loaded shared proposal: ${sharedProposal.title}`);
-          // Clear hash to avoid re-triggering on reload
-          window.history.replaceState(null, '', window.location.pathname);
-        }
-      } catch (e) {
-        console.error('Failed to parse shared proposal URL hash', e);
-      }
-    }
-  }, []);
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = React.useState<boolean>(false);
+  const [isExportProgressOpen, setIsExportProgressOpen] = React.useState<boolean>(false);
 
   // Show auto-dismissing toast message
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
-  };
-
-  // Update proposal handler
-  const handleUpdateProposal = (updatedProposal: Proposal) => {
-    setProposals((prev) =>
-      prev.map((p) => (p.id === updatedProposal.id ? updatedProposal : p))
-    );
-  };
-
-  // Explicit Save callback
-  const handleSaveNow = () => {
-    try {
-      localStorage.setItem('proposa_proposals_v1', JSON.stringify(proposals));
-      showToast('All proposal changes saved to local storage!');
-    } catch (e) {
-      showToast('Saved changes.');
-    }
-  };
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -145,78 +78,110 @@ export function App() {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
-      // Ctrl/Cmd + S: Save
+      // Ctrl/Cmd + S: Save (handled by Navbar, but we can keep for future use)
       if (modifier && e.key === 's') {
         e.preventDefault();
-        handleSaveNow();
+        // Save is now automatic, but we can show toast
+        showToast('Changes saved automatically');
       }
 
       // Ctrl/Cmd + Shift + P: Toggle Preview Mode
       if (modifier && e.shiftKey && e.key === 'P') {
         e.preventDefault();
-        setPreviewModeOnly(!previewModeOnly);
+        togglePreviewMode();
+      }
+
+      // Ctrl/Cmd + Z: Undo
+      if (modifier && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) undo();
+      }
+
+      // Ctrl/Cmd + Shift + Z: Redo
+      if (modifier && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        if (canRedo) redo();
       }
 
       // Arrow Left/Right: Navigate pages (when not in preview mode and sidebar closed on mobile)
       if (!previewModeOnly && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         if (!isMobile || !sidebarOpen) {
           e.preventDefault();
-          const newIndex = e.key === 'ArrowLeft' 
-            ? Math.max(0, activePageIndex - 1)
-            : Math.min(activeProposal.pages.length - 1, activePageIndex + 1);
-          setActivePageIndex(newIndex);
+          const newIndex = e.key === 'ArrowLeft'
+            ? Math.max(0, state.activePageIndex - 1)
+            : Math.min(activeProposal.pages.length - 1, state.activePageIndex + 1);
+          ctxSetActivePageIndex(newIndex);
         }
       }
 
       // Escape: Close modals/sidebar
       if (e.key === 'Escape') {
         if (isShareModalOpen) setIsShareModalOpen(false);
-        if (isExportProgressOpen) abortControllerRef.current?.abort();
+        if (isExportProgressOpen) {
+          abortControllerRef.current?.abort();
+          cancelExport();
+        }
         if (isMobile && sidebarOpen) setSidebarOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activePageIndex, activeProposal.pages.length, handleSaveNow, isMobile, sidebarOpen, isShareModalOpen, isExportProgressOpen, previewModeOnly]);
+  }, [
+    state.activePageIndex,
+    activeProposal.pages.length,
+    previewModeOnly,
+    isMobile,
+    sidebarOpen,
+    isShareModalOpen,
+    isExportProgressOpen,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    ctxSetActivePageIndex,
+    togglePreviewMode,
+    setSidebarOpen,
+    cancelExport,
+    showToast,
+    isExportProgressOpen,
+  ]);
+
+  // Explicit Save callback (now mostly for toast feedback since autosave is automatic)
+  const handleSaveNow = useCallback(() => {
+    showToast('All proposal changes saved to local storage!');
+  }, [showToast]);
 
   // Update proposal title
-  const handleUpdateProposalTitle = (id: string, newTitle: string) => {
-    setProposals((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, title: newTitle, updatedAt: new Date().toISOString() } : p))
-    );
+  const handleUpdateProposalTitle = useCallback((id: string, newTitle: string) => {
+    ctxUpdateProposal({
+      ...state.proposals.find((p) => p.id === id)!,
+      title: newTitle,
+      updatedAt: new Date().toISOString()
+    });
     showToast(`Proposal renamed to "${newTitle}"`);
-  };
+  }, [ctxUpdateProposal, state.proposals, showToast]);
 
   // Delete proposal handler
-  const handleDeleteProposal = (idToDelete: string) => {
-    const filtered = proposals.filter((p) => p.id !== idToDelete);
+  const handleDeleteProposal = useCallback((idToDelete: string) => {
+    const filtered = state.proposals.filter((p) => p.id !== idToDelete);
     if (filtered.length === 0) return;
 
-    setProposals(filtered);
-    if (activeProposalId === idToDelete) {
-      setActiveProposalId(filtered[0].id);
-      setActivePageIndex(0);
+    if (state.activeProposalId === idToDelete) {
+      ctxSelectProposal(filtered[0].id);
     }
+    ctxDeleteProposal(idToDelete);
     showToast('Proposal deleted.');
-  };
+  }, [state.proposals, state.activeProposalId, ctxSelectProposal, ctxDeleteProposal, showToast]);
 
   // Import proposal handler
-  const handleImportProposal = (importedProposal: Proposal) => {
-    setProposals((prev) => [importedProposal, ...prev]);
-    setActiveProposalId(importedProposal.id);
-    setActivePageIndex(0);
+  const handleImportProposal = useCallback((importedProposal: Proposal) => {
+    ctxImportProposal(importedProposal);
     showToast(`Imported proposal "${importedProposal.title}"`);
-  };
-
-  // Switch active proposal
-  const handleSelectProposal = (id: string) => {
-    setActiveProposalId(id);
-    setActivePageIndex(0);
-  };
+  }, [ctxImportProposal, showToast]);
 
   // Create brand new blank proposal
-  const handleCreateProposal = () => {
+  const handleCreateProposal = useCallback(() => {
     const newProp: Proposal = {
       id: `prop-${Date.now()}`,
       title: 'New Client Proposal',
@@ -236,7 +201,7 @@ export function App() {
           id: `page-${Date.now()}-1`,
           pageTitle: 'Cover Page',
           type: 'cover',
-          coverData: {
+          data: {
             mainTitle: 'New Client Project Proposal',
             subtitle: 'Prepared Exclusively For',
             clientName: 'New Client',
@@ -248,7 +213,7 @@ export function App() {
           id: `page-${Date.now()}-2`,
           pageTitle: 'Services & Scope',
           type: 'category-table',
-          tableData: {
+          data: {
             categoryTitle: 'CATEGORY',
             detailsTitle: 'DETAILS',
             rows: [
@@ -261,7 +226,7 @@ export function App() {
           id: `page-${Date.now()}-3`,
           pageTitle: 'Investment & Retainer',
           type: 'pricing-highlight',
-          pricingData: {
+          data: {
             highlightBoxTitle: 'Monthly – $2,500 + Taxes',
             highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
             notesHeader: 'Note',
@@ -273,14 +238,12 @@ export function App() {
       ]
     };
 
-    setProposals((prev) => [...prev, newProp]);
-    setActiveProposalId(newProp.id);
-    setActivePageIndex(0);
+    ctxCreateProposal(newProp);
     showToast('Created new proposal draft.');
-  };
+  }, [activeProposal, ctxCreateProposal, showToast]);
 
   // Duplicate current proposal
-  const handleDuplicateProposal = () => {
+  const handleDuplicateProposal = useCallback(() => {
     const duplicated: Proposal = {
       ...JSON.parse(JSON.stringify(activeProposal)),
       id: `prop-dup-${Date.now()}`,
@@ -288,27 +251,22 @@ export function App() {
       updatedAt: new Date().toISOString()
     };
 
-    setProposals((prev) => [...prev, duplicated]);
-    setActiveProposalId(duplicated.id);
-    setActivePageIndex(0);
+    ctxCreateProposal(duplicated);
     showToast('Duplicated active proposal.');
-  };
+  }, [activeProposal, ctxCreateProposal, showToast]);
 
   // Add new page to current proposal
-  const handleAddPage = (type: PageType) => {
-    let newPage: ProposalPage = {
-      id: `page-${Date.now()}`,
-      pageTitle: 'New Section',
-      type
-    };
+  const handleAddPage = useCallback((type: PageType) => {
+    let newPage: ProposalPage;
 
     if (type === 'cover') {
       const now = new Date();
       const dateText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Cover Page',
-        coverData: {
+        type: 'cover',
+        data: {
           mainTitle: 'Client Proposal Title',
           subtitle: 'Prepared Exclusively For',
           clientName: activeProposal.client.name,
@@ -318,9 +276,10 @@ export function App() {
       };
     } else if (type === 'category-table') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Services & Scope',
-        tableData: {
+        type: 'category-table',
+        data: {
           categoryTitle: 'CATEGORY',
           detailsTitle: 'DETAILS',
           rows: [
@@ -331,9 +290,10 @@ export function App() {
       };
     } else if (type === 'pricing-highlight') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Investment & Terms',
-        pricingData: {
+        type: 'pricing-highlight',
+        data: {
           highlightBoxTitle: 'Monthly – $5,000 + Taxes',
           highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
           notesHeader: 'Note',
@@ -344,9 +304,10 @@ export function App() {
       };
     } else if (type === 'deliverables-grid') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Core Features',
-        deliverablesData: {
+        type: 'deliverables-grid',
+        data: {
           sectionTitle: 'Core Features',
           items: [
             { id: 'd1', title: 'Feature 1', description: 'Feature details and deliverables.', badge: 'Included' },
@@ -356,9 +317,10 @@ export function App() {
       };
     } else if (type === 'terms-signature') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Terms & Acceptance',
-        termsData: {
+        type: 'terms-signature',
+        data: {
           legalTerms: 'This proposal represents the entire agreement between parties.',
           paymentTerms: 'Payment due 15 days from invoice date.',
           validUntil: '30 Days',
@@ -370,21 +332,19 @@ export function App() {
       };
     } else {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Executive Summary',
-        freeformData: {
+        type: 'freeform',
+        data: {
           heading: 'Executive Summary',
           content: 'Add your custom proposal narrative here.'
         }
       };
     }
 
-    const updatedPages = [...activeProposal.pages, newPage];
-    const updatedProposal = { ...activeProposal, pages: updatedPages, updatedAt: new Date().toISOString() };
-    handleUpdateProposal(updatedProposal);
-    setActivePageIndex(updatedPages.length - 1);
+    ctxAddPage(activeProposal.id, newPage);
     showToast(`Added ${type} page`);
-  };
+  }, [activeProposal, ctxAddPage, showToast]);
 
   // Native Browser Print
   const handlePrintNative = useCallback(() => {
@@ -396,21 +356,19 @@ export function App() {
     if (!pagesContainerRef.current) return;
 
     abortControllerRef.current = new AbortController();
-    setIsExporting(true);
-    setIsExportProgressOpen(true);
-    setExportProgressDetail({
+    startExport({
       progress: 0,
       currentPage: 0,
       totalPages: activeProposal.pages.length,
       status: 'rendering'
     });
+    setIsExportProgressOpen(true);
 
     try {
       const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
       await exportProposalToPdf(pagesContainerRef.current, filename, {
         onProgress: (detail) => {
-          setExportProgressDetail(detail);
-          setExportProgress(detail.progress);
+          updateProgress(detail);
         },
         signal: abortControllerRef.current.signal
       });
@@ -423,23 +381,24 @@ export function App() {
         showToast('Export failed. Try Print to PDF instead.');
       }
     } finally {
-      setIsExporting(false);
+      cancelExport();
       setTimeout(() => setIsExportProgressOpen(false), 1500);
     }
-  }, [activeProposal]);
+  }, [activeProposal, startExport, updateProgress, showToast]);
 
   const handleCancelExport = useCallback(() => {
     abortControllerRef.current?.abort();
+    cancelExport();
     setIsExportProgressOpen(false);
-  }, []);
+  }, [cancelExport]);
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] flex flex-col font-jakarta overflow-hidden">
       {/* Top Header Toolbar */}
       <Navbar
-        proposals={proposals}
+        proposals={state.proposals}
         activeProposal={activeProposal}
-        onSelectProposal={handleSelectProposal}
+        onSelectProposal={ctxSelectProposal}
         onCreateProposal={handleCreateProposal}
         onDuplicateProposal={handleDuplicateProposal}
         onDeleteProposal={handleDeleteProposal}
@@ -452,9 +411,9 @@ export function App() {
         isExporting={isExporting}
         exportProgress={exportProgress}
         previewModeOnly={previewModeOnly}
-        onTogglePreviewMode={() => setPreviewModeOnly(!previewModeOnly)}
+        onTogglePreviewMode={togglePreviewMode}
         splitView={splitView}
-        onToggleSplitView={() => setSplitView(!splitView)}
+        onToggleSplitView={toggleSplitView}
         onDownloadPdf={handleDownloadPdf}
       />
 
@@ -505,9 +464,9 @@ export function App() {
             <div className="flex-1 min-w-0 h-full border-r border-slate-200 bg-white no-print">
               <ProposalEditor
                 proposal={activeProposal}
-                activePageIndex={activePageIndex}
-                onSelectPage={setActivePageIndex}
-                onUpdateProposal={handleUpdateProposal}
+                activePageIndex={state.activePageIndex}
+                onSelectPage={ctxSetActivePageIndex}
+                onUpdateProposal={ctxUpdateProposal}
                 isMobile={isMobile}
               />
             </div>
@@ -535,11 +494,11 @@ export function App() {
                     key={page.id}
                     id={`page-card-${idx}`}
                     className="relative flex flex-col items-center w-full"
-                    style={idx !== activePageIndex
+                    style={idx !== state.activePageIndex
                       ? { position: 'absolute', top: 0, left: 0, right: 0, opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }
                       : undefined}
                   >
-                    {idx === activePageIndex && (
+                    {idx === state.activePageIndex && (
                       <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
                         <span className="flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5 text-slate-700" />
@@ -559,7 +518,7 @@ export function App() {
                         theme={activeProposal.theme}
                         pageNumber={idx + 1}
                         totalPages={activeProposal.pages.length}
-                        isSelected={idx === activePageIndex}
+                        isSelected={idx === state.activePageIndex}
                       />
                     </div>
                   </div>
@@ -597,148 +556,148 @@ export function App() {
                   </div>
                   <ProposalEditor
                     proposal={activeProposal}
-                    activePageIndex={activePageIndex}
-                    onSelectPage={setActivePageIndex}
-                    onUpdateProposal={handleUpdateProposal}
+                    activePageIndex={state.activePageIndex}
+                    onSelectPage={ctxSetActivePageIndex}
+                    onUpdateProposal={ctxUpdateProposal}
                     isMobile={isMobile}
                   />
                 </div>
               </aside>
             )}
 
-            {/* Desktop Sidebar */}
-            {!isMobile && (
-              <div className="no-print w-[380px] flex-shrink-0 h-full border-r border-slate-200 bg-white">
-                <ProposalEditor
-                  proposal={activeProposal}
-                  activePageIndex={activePageIndex}
-                  onSelectPage={setActivePageIndex}
-                  onUpdateProposal={handleUpdateProposal}
-                  isMobile={isMobile}
-                />
-              </div>
+                {/* Desktop Sidebar */}
+                {!isMobile && (
+                  <div className="no-print w-[380px] flex-shrink-0 h-full border-r border-slate-200 bg-white">
+                    <ProposalEditor
+                      proposal={activeProposal}
+                      activePageIndex={state.activePageIndex}
+                      onSelectPage={ctxSetActivePageIndex}
+                      onUpdateProposal={ctxUpdateProposal}
+                      isMobile={isMobile}
+                    />
+                  </div>
+                )}
+              </>
             )}
-</>
-        )}
 
-        {/* Right Canvas Area: Live A4 Paginated Preview - Swipe Navigation */}
-        <div className="flex-1 h-full bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
-          {/* Mobile: Toggle Sidebar Button */}
-          {isMobile && !previewModeOnly && !splitView && (
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="no-print fixed bottom-6 left-6 z-30 p-3 bg-white border border-slate-200 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all"
-              aria-label={sidebarOpen ? 'Close editor' : 'Open editor'}
-            >
-              {sidebarOpen ? (
-                <>
-                  <ChevronLeft className="w-4 h-4" />
-                  Hide Editor
-                </>
-              ) : (
-                <>
-                  <ChevronRight className="w-4 h-4" />
-                  Show Editor
-                </>
+            {/* Right Canvas Area: Live A4 Paginated Preview - Swipe Navigation */}
+            <div className="flex-1 h-full bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
+              {/* Mobile: Toggle Sidebar Button */}
+              {isMobile && !previewModeOnly && !splitView && (
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="no-print fixed bottom-6 left-6 z-30 p-3 bg-white border border-slate-200 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all"
+                  aria-label={sidebarOpen ? 'Close editor' : 'Open editor'}
+                >
+                  {sidebarOpen ? (
+                    <>
+                      <ChevronLeft className="w-4 h-4" />
+                      Hide Editor
+                    </>
+                  ) : (
+                    <>
+                      <ChevronRight className="w-4 h-4" />
+                      Show Editor
+                    </>
+                  )}
+                </button>
               )}
-            </button>
-          )}
 
-          {/* Mobile: Action FAB */}
-          {isMobile && !previewModeOnly && (
-            <div className="no-print fixed bottom-6 right-6 z-30">
-              {/* FAB Menu Items */}
-              {fabMenuOpen && (
-                <div className="absolute bottom-16 right-0 mb-2 flex flex-col-reverse items-end gap-2 animate-in slide-in-from-bottom-2 duration-200">
+              {/* Mobile: Action FAB */}
+              {isMobile && !previewModeOnly && (
+                <div className="no-print fixed bottom-6 right-6 z-30">
+                  {/* FAB Menu Items */}
+                  {fabMenuOpen && (
+                    <div className="absolute bottom-16 right-0 mb-2 flex flex-col-reverse items-end gap-2 animate-in slide-in-from-bottom-2 duration-200">
+                      <button
+                        type="button"
+                        onClick={() => { handleCreateProposal(); setFabMenuOpen(false); }}
+                        disabled={isExporting}
+                        className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                        aria-label="New Proposal"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>New Proposal</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { handleDuplicateProposal(); setFabMenuOpen(false); }}
+                        disabled={isExporting}
+                        className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                        aria-label="Duplicate Proposal"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>Duplicate</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { handleAddPage('category-table'); setFabMenuOpen(false); }}
+                        disabled={isExporting}
+                        className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                        aria-label="Add Section"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Add Section</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsShareModalOpen(true); setFabMenuOpen(false); }}
+                        disabled={isExporting}
+                        className="p-3 bg-emerald-50 text-emerald-800 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-emerald-100 border border-emerald-200 min-w-[160px] justify-end"
+                        aria-label="Share Proposal"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>Share</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { handleDownloadPdf(); setFabMenuOpen(false); }}
+                        disabled={isExporting}
+                        className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
+                        aria-label="Download PDF"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download PDF</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Main FAB */}
                   <button
                     type="button"
-                    onClick={() => { handleCreateProposal(); setFabMenuOpen(false); }}
+                    onClick={() => setFabMenuOpen(!fabMenuOpen)}
+                    onContextMenu={(e) => { e.preventDefault(); setFabMenuOpen(!fabMenuOpen); }}
                     disabled={isExporting}
-                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
-                    aria-label="New Proposal"
+                    className={`p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800 ${fabMenuOpen ? 'rotate-45' : ''}`}
+                    aria-label={fabMenuOpen ? 'Close actions' : 'Open actions'}
+                    aria-expanded={fabMenuOpen}
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>New Proposal</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { handleDuplicateProposal(); setFabMenuOpen(false); }}
-                    disabled={isExporting}
-                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
-                    aria-label="Duplicate Proposal"
-                  >
-                    <Copy className="w-4 h-4" />
-                    <span>Duplicate</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { handleAddPage('category-table'); setFabMenuOpen(false); }}
-                    disabled={isExporting}
-                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
-                    aria-label="Add Section"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>Add Section</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setIsShareModalOpen(true); setFabMenuOpen(false); }}
-                    disabled={isExporting}
-                    className="p-3 bg-emerald-50 text-emerald-800 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-emerald-100 border border-emerald-200 min-w-[160px] justify-end"
-                    aria-label="Share Proposal"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>Share</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { handleDownloadPdf(); setFabMenuOpen(false); }}
-                    disabled={isExporting}
-                    className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
-                    aria-label="Download PDF"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download PDF</span>
+                    <Download className="w-5 h-5" />
                   </button>
                 </div>
               )}
 
-              {/* Main FAB */}
-              <button
-                type="button"
-                onClick={() => setFabMenuOpen(!fabMenuOpen)}
-                onContextMenu={(e) => { e.preventDefault(); setFabMenuOpen(!fabMenuOpen); }}
-                disabled={isExporting}
-                className={`p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800 ${fabMenuOpen ? 'rotate-45' : ''}`}
-                aria-label={fabMenuOpen ? 'Close actions' : 'Open actions'}
-                aria-expanded={fabMenuOpen}
+              {/* Swipeable Pages Container for PDF Export */}
+              <div
+                ref={pagesContainerRef}
+                className="print-area flex-1 w-full"
               >
-                <Download className="w-5 h-5" />
-              </button>
+                <SwipeablePages
+                  pages={activeProposal.pages}
+                  activePageIndex={state.activePageIndex}
+                  onPageChange={ctxSetActivePageIndex}
+                  agency={activeProposal.agency}
+                  client={activeProposal.client}
+                  theme={activeProposal.theme}
+                  isMobile={isMobile}
+                  zoomLevel={zoomLevel}
+                  showPageBadges={!previewModeOnly}
+                />
+              </div>
             </div>
-          )}
-
-          {/* Swipeable Pages Container for PDF Export */}
-          <div
-            ref={pagesContainerRef}
-            className="print-area flex-1 w-full"
-          >
-            <SwipeablePages
-              pages={activeProposal.pages}
-              activePageIndex={activePageIndex}
-              onPageChange={setActivePageIndex}
-              agency={activeProposal.agency}
-              client={activeProposal.client}
-              theme={activeProposal.theme}
-              isMobile={isMobile}
-              zoomLevel={zoomLevel}
-              showPageBadges={!previewModeOnly}
-            />
-          </div>
-        </div>
-      </>
-    )}
+          </>
+        )}
 
         {/* PREVIEW ONLY MODE: Full width preview with swipe navigation */}
         {previewModeOnly && (
@@ -749,8 +708,8 @@ export function App() {
             >
               <SwipeablePages
                 pages={activeProposal.pages}
-                activePageIndex={activePageIndex}
-                onPageChange={setActivePageIndex}
+                activePageIndex={state.activePageIndex}
+                onPageChange={ctxSetActivePageIndex}
                 agency={activeProposal.agency}
                 client={activeProposal.client}
                 theme={activeProposal.theme}
@@ -763,6 +722,18 @@ export function App() {
         )}
       </div>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ProposalProvider>
+      <ViewProvider>
+        <ExportProvider>
+          <AppContent />
+        </ExportProvider>
+      </ViewProvider>
+    </ProposalProvider>
   );
 }
 

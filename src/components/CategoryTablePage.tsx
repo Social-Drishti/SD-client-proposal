@@ -8,7 +8,7 @@ interface CategoryTablePageProps {
   pageTitle: string;
   agency: ProposalAgency;
   theme: ProposalTheme;
-  data?: TablePageData;
+  data: TablePageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -21,9 +21,9 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
   pageNumber,
   totalPages
 }) => {
-  const categoryHeader = data?.categoryTitle || 'CATEGORY';
-  const detailsHeader = data?.detailsTitle || 'DETAILS';
-  const rows = data?.rows || [];
+  const categoryHeader = data.categoryTitle || 'CATEGORY';
+  const detailsHeader = data.detailsTitle || 'DETAILS';
+  const rows = data.rows || [];
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">

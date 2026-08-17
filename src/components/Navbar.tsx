@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Proposal } from '../types';
+import { useProposalContext } from '../context/ProposalContext';
 import {
   Download,
   Printer,
@@ -20,11 +21,12 @@ import {
   Layout,
   Columns,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
 interface NavbarProps {
-  proposals: Proposal[];
   activeProposal: Proposal;
   onSelectProposal: (proposalId: string) => void;
   onCreateProposal: () => void;
@@ -46,7 +48,6 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  proposals,
   activeProposal,
   onSelectProposal,
   onCreateProposal,
@@ -66,11 +67,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   splitView,
   onToggleSplitView
 }) => {
+  const { state, clearSaveError } = useProposalContext();
+  const proposals = state.proposals;
+  const lastSavedAt = state.lastSavedAt;
+  const saveError = state.saveError;
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [tempTitle, setTempTitle] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Format relative time for last saved indicator
+  const getLastSavedText = () => {
+    if (!lastSavedAt) return 'Not saved yet';
+    const diff = Date.now() - lastSavedAt;
+    if (diff < 1000) return 'Just saved';
+    if (diff < 60000) return `Saved ${Math.floor(diff / 1000)}s ago`;
+    if (diff < 3600000) return `Saved ${Math.floor(diff / 60000)}m ago`;
+    return `Saved ${Math.floor(diff / 3600000)}h ago`;
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -314,6 +330,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Center Controls: Canvas Zoom & View Mode - Hidden on mobile, shown in mobile menu */}
       <div className="hidden sm:flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-lg">
+        {/* Last Saved Indicator */}
+        <div className="flex items-center gap-1.5 px-2 text-xs text-slate-500 border-r border-slate-200 pr-2">
+          <Clock className="w-3.5 h-3.5 text-slate-400" />
+          <span className="font-mono font-medium text-slate-700">{getLastSavedText()}</span>
+        </div>
+
+        {/* Save Error Display */}
+        {saveError && (
+          <div className="flex items-center gap-1.5 px-2 text-xs text-red-600 border-r border-slate-200 pr-2" onClick={clearSaveError}>
+            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+            <span className="font-medium">{saveError}</span>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => onChangeZoom(Math.max(0.4, zoomLevel - 0.1))}

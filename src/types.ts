@@ -17,7 +17,7 @@ export type PageType =
 export interface CategoryTableRow {
   id: string;
   category: string;
-  details: string; // supports multiline / bullets
+  details: string;
 }
 
 export interface TablePageData {
@@ -33,8 +33,8 @@ export interface PricingNote {
 }
 
 export interface PricingPageData {
-  highlightBoxTitle: string; // e.g. "Monthly – INR 1,00,000 + 18% GST"
-  highlightBoxSubtitle: string; // e.g. "(Minimum Lock-in Period 6 Months)"
+  highlightBoxTitle: string;
+  highlightBoxSubtitle: string;
   notesHeader: string;
   notes: PricingNote[];
 }
@@ -89,25 +89,29 @@ export interface FreeformPageData {
   content: string;
 }
 
-export interface ProposalPage {
-  id: string;
-  pageTitle: string;
-  type: PageType;
-  accentBarColor?: string; // override for section title vertical bar
-  coverData?: CoverPageData;
-  tableData?: TablePageData;
-  pricingData?: PricingPageData;
-  deliverablesData?: DeliverablesPageData;
-  milestonesData?: MilestonesPageData;
-  termsData?: TermsPageData;
-  freeformData?: FreeformPageData;
-}
+export type ProposalPageData =
+  | CoverPageData
+  | TablePageData
+  | PricingPageData
+  | DeliverablesPageData
+  | MilestonesPageData
+  | TermsPageData
+  | FreeformPageData;
+
+export type ProposalPage =
+  | { id: string; pageTitle: string; type: 'cover'; data: CoverPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'category-table'; data: TablePageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'pricing-highlight'; data: PricingPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'terms-signature'; data: TermsPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'freeform'; data: FreeformPageData; accentBarColor?: string };
 
 export interface ProposalAgency {
   name: string;
   tagline: string;
-  logoUrl?: string; // Header / primary logo URL
-  footerLogoUrl?: string; // Footer logo URL
+  logoUrl?: string;
+  footerLogoUrl?: string;
   email: string;
   phone: string;
   website: string;
@@ -124,9 +128,9 @@ export interface ProposalClient {
 
 export interface ProposalTheme {
   templateId: TemplateStyle;
-  primaryColor: string; // e.g. #0284c7 or #0f766e
-  accentColor: string; // e.g. #f59e0b (amber vertical bar)
-  secondaryColor: string; // e.g. #1e293b
+  primaryColor: string;
+  accentColor: string;
+  secondaryColor: string;
   bgGradientStyle: 'teal-wave' | 'navy-slate' | 'minimal-light' | 'emerald-glass' | 'monochrome';
   fontFamily: 'Plus Jakarta Sans' | 'Outfit' | 'Playfair Display' | 'Inter';
   showLogoOnPages: boolean;
@@ -145,7 +149,7 @@ export interface ProposalTheme {
   watermarkType?: 'logo' | 'text';
   watermarkText?: string;
   watermarkLogoUrl?: string;
-  watermarkOpacity?: number; // 0.03 to 0.20
+  watermarkOpacity?: number;
 }
 
 export interface Proposal {
@@ -157,4 +161,132 @@ export interface Proposal {
   client: ProposalClient;
   theme: ProposalTheme;
   pages: ProposalPage[];
+}
+
+export interface LegacyProposalPage {
+  id: string;
+  pageTitle: string;
+  type: PageType;
+  accentBarColor?: string;
+  coverData?: CoverPageData;
+  tableData?: TablePageData;
+  pricingData?: PricingPageData;
+  deliverablesData?: DeliverablesPageData;
+  milestonesData?: MilestonesPageData;
+  termsData?: TermsPageData;
+  freeformData?: FreeformPageData;
+}
+
+export interface LegacyProposal extends Omit<Proposal, 'pages'> {
+  pages: LegacyProposalPage[];
+}
+
+export function migrateProposalPage(oldPage: LegacyProposalPage): ProposalPage {
+  const base = {
+    id: oldPage.id,
+    pageTitle: oldPage.pageTitle,
+    type: oldPage.type,
+    accentBarColor: oldPage.accentBarColor,
+  };
+
+  switch (oldPage.type) {
+    case 'cover': {
+      const page = base as { id: string; pageTitle: string; type: 'cover'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.coverData ?? {
+          mainTitle: 'Client Proposal',
+          subtitle: 'Prepared Exclusively For',
+          clientName: '',
+          clientRole: '',
+          dateText: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        },
+      };
+    }
+    case 'category-table': {
+      const page = base as { id: string; pageTitle: string; type: 'category-table'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.tableData ?? {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [],
+        },
+      };
+    }
+    case 'pricing-highlight': {
+      const page = base as { id: string; pageTitle: string; type: 'pricing-highlight'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.pricingData ?? {
+          highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+          highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+          notesHeader: 'Note',
+          notes: [],
+        },
+      };
+    }
+    case 'deliverables-grid': {
+      const page = base as { id: string; pageTitle: string; type: 'deliverables-grid'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.deliverablesData ?? {
+          sectionTitle: 'Core Features',
+          items: [],
+        },
+      };
+    }
+    case 'milestones': {
+      const page = base as { id: string; pageTitle: string; type: 'milestones'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.milestonesData ?? {
+          sectionTitle: 'Project Milestones',
+          steps: [],
+        },
+      };
+    }
+    case 'terms-signature': {
+      const page = base as { id: string; pageTitle: string; type: 'terms-signature'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.termsData ?? {
+          legalTerms: 'This proposal represents the entire agreement between parties.',
+          paymentTerms: 'Payment due 15 days from invoice date.',
+          validUntil: '30 Days',
+          agencySignatoryName: '',
+          agencySignatoryTitle: 'Authorized Representative',
+          clientSignatoryName: '',
+          clientSignatoryTitle: '',
+        },
+      };
+    }
+    case 'freeform': {
+      const page = base as { id: string; pageTitle: string; type: 'freeform'; accentBarColor?: string };
+      return {
+        ...page,
+        data: oldPage.freeformData ?? {
+          heading: 'Executive Summary',
+          content: 'Add your custom proposal narrative here.',
+        },
+      };
+    }
+    default:
+      const _exhaustive: never = oldPage.type;
+      throw new Error(`Unknown page type: ${_exhaustive}`);
+  }
+}
+
+export function migrateProposal(oldProposal: LegacyProposal): Proposal {
+  return {
+    ...oldProposal,
+    pages: oldProposal.pages.map(migrateProposalPage),
+  };
+}
+
+export function isLegacyProposal(proposal: any): proposal is LegacyProposal {
+  if (!proposal || !Array.isArray(proposal.pages)) return false;
+  const firstPage = proposal.pages[0];
+  if (!firstPage) return false;
+  return 'coverData' in firstPage || 'tableData' in firstPage || 'pricingData' in firstPage;
 }

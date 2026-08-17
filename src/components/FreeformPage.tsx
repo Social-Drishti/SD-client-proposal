@@ -8,7 +8,7 @@ interface FreeformPageProps {
   pageTitle: string;
   agency: ProposalAgency;
   theme: ProposalTheme;
-  data?: FreeformPageData;
+  data: FreeformPageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -21,7 +21,7 @@ export const FreeformPage: React.FC<FreeformPageProps> = ({
   pageNumber,
   totalPages
 }) => {
-  const content = data?.content || 'Add custom proposal text, executive summaries, or brand background here.';
+  const content = data.content || 'Add custom proposal text, executive summaries, or brand background here.';
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">

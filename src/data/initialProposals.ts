@@ -24,9 +24,9 @@ export const socialDrishtiProposal: Proposal = {
   },
   theme: {
     templateId: "social-drishti",
-    primaryColor: "#00838f", // Teal
-    accentColor: "#f59e0b", // Amber vertical bar
-    secondaryColor: "#0f172a", // Navy
+    primaryColor: "#00838f",
+    accentColor: "#f59e0b",
+    secondaryColor: "#0f172a",
     bgGradientStyle: "teal-wave",
     fontFamily: "Plus Jakarta Sans",
     showLogoOnPages: true,
@@ -42,7 +42,7 @@ export const socialDrishtiProposal: Proposal = {
       id: "page-cover",
       pageTitle: "Cover Page",
       type: "cover",
-      coverData: {
+      data: {
         mainTitle: "Social Media Management Video Production Proposal",
         subtitle: "Prepared Exclusively For",
         clientName: "Dr. Rajneesh Kant",
@@ -55,7 +55,7 @@ export const socialDrishtiProposal: Proposal = {
       pageTitle: "Social Media Management (Scope)",
       type: "category-table",
       accentBarColor: "#f59e0b",
-      tableData: {
+      data: {
         categoryTitle: "CATEGORY",
         detailsTitle: "DETAILS",
         rows: [
@@ -102,7 +102,7 @@ export const socialDrishtiProposal: Proposal = {
       pageTitle: "Social Media Management (Operations)",
       type: "category-table",
       accentBarColor: "#f59e0b",
-      tableData: {
+      data: {
         categoryTitle: "CATEGORY",
         detailsTitle: "DETAILS",
         rows: [
@@ -139,7 +139,7 @@ export const socialDrishtiProposal: Proposal = {
       pageTitle: "Video Production",
       type: "category-table",
       accentBarColor: "#f59e0b",
-      tableData: {
+      data: {
         categoryTitle: "CATEGORY",
         detailsTitle: "DETAILS",
         rows: [
@@ -191,23 +191,7 @@ export const socialDrishtiProposal: Proposal = {
       pageTitle: "Investment & Commercials",
       type: "pricing-highlight",
       accentBarColor: "#f59e0b",
-      tableData: {
-        categoryTitle: "CATEGORY",
-        detailsTitle: "DETAILS",
-        rows: [
-          {
-            id: "p1",
-            category: "Format",
-            details: "Optimised as reels – vertical 9:16 format",
-          },
-          {
-            id: "p2",
-            category: "Revision",
-            details: "1 revision per video Included",
-          },
-        ],
-      },
-      pricingData: {
+      data: {
         highlightBoxTitle: "Monthly – INR 1,00,000 + 18% GST",
         highlightBoxSubtitle: "(Minimum Lock-in Period 6 Months)",
         notesHeader: "Note",
@@ -267,7 +251,7 @@ export const webDevProposal: Proposal = {
       id: "web-cover",
       pageTitle: "Cover Page",
       type: "cover",
-      coverData: {
+      data: {
         mainTitle: "Enterprise Web Application & Portal Redesign",
         subtitle: "Prepared For Apex Health Systems",
         clientName: "Sarah Jenkins",
@@ -280,7 +264,7 @@ export const webDevProposal: Proposal = {
       pageTitle: "Scope of Work",
       type: "category-table",
       accentBarColor: "#d97706",
-      tableData: {
+      data: {
         categoryTitle: "MODULE",
         detailsTitle: "DELIVERABLE & SPECIFICATIONS",
         rows: [
@@ -310,7 +294,7 @@ export const webDevProposal: Proposal = {
       pageTitle: "Investment & Payment Milestones",
       type: "pricing-highlight",
       accentBarColor: "#d97706",
-      pricingData: {
+      data: {
         highlightBoxTitle: "Total Investment: $38,500 USD",
         highlightBoxSubtitle: "(Fixed Scope Project — 12 Weeks Delivery)",
         notesHeader: "Payment Schedule",

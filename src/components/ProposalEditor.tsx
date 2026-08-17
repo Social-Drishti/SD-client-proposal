@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Proposal, ProposalPage, PageType, CategoryTableRow, PricingNote } from '../types';
 import { ThemeSelector } from './ThemeSelector';
 import { SplitEditor } from './SplitEditor';
+import { getPageRegistryEntries } from '../data/pageRegistry';
 import {
   Layers,
   FileText,
@@ -16,7 +17,10 @@ import {
   Briefcase,
   Upload,
   Image,
-  GripVertical
+  GripVertical,
+  ListTodo,
+  FilePen,
+  FileType
 } from 'lucide-react';
 
 interface ProposalEditorProps {
@@ -45,7 +49,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
   // Track original content for freeform pages
   useEffect(() => {
     if (activePage?.type === 'freeform' && activePage.id !== freeformTrackedPageId) {
-      setFreeformOriginalContent(activePage.freeformData?.content || '');
+      setFreeformOriginalContent(activePage.data?.content || '');
       setFreeformTrackedPageId(activePage.id);
     }
   }, [activePage, freeformTrackedPageId]);
@@ -63,19 +67,16 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
 
   // Helper to add new page
   const handleAddPage = (type: PageType) => {
-    let newPage: ProposalPage = {
-      id: `page-${Date.now()}`,
-      pageTitle: 'New Section',
-      type
-    };
+    let newPage: ProposalPage;
 
     if (type === 'cover') {
       const now = new Date();
       const dateText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Cover Page',
-        coverData: {
+        type: 'cover',
+        data: {
           mainTitle: 'Client Proposal Title',
           subtitle: 'Prepared Exclusively For',
           clientName: proposal.client.name,
@@ -85,9 +86,10 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
       };
     } else if (type === 'category-table') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Services & Scope',
-        tableData: {
+        type: 'category-table',
+        data: {
           categoryTitle: 'CATEGORY',
           detailsTitle: 'DETAILS',
           rows: [
@@ -98,9 +100,10 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
       };
     } else if (type === 'pricing-highlight') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Investment & Terms',
-        pricingData: {
+        type: 'pricing-highlight',
+        data: {
           highlightBoxTitle: 'Monthly – $5,000 + Taxes',
           highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
           notesHeader: 'Note',
@@ -111,9 +114,10 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
       };
     } else if (type === 'deliverables-grid') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Core Features',
-        deliverablesData: {
+        type: 'deliverables-grid',
+        data: {
           sectionTitle: 'Core Features',
           items: [
             { id: 'd1', title: 'Feature 1', description: 'Feature details and deliverables.', badge: 'Included' },
@@ -123,9 +127,10 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
       };
     } else if (type === 'terms-signature') {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Terms & Acceptance',
-        termsData: {
+        type: 'terms-signature',
+        data: {
           legalTerms: 'This proposal represents the entire agreement between parties.',
           paymentTerms: 'Payment due 15 days from invoice date.',
           validUntil: '30 Days',
@@ -137,9 +142,10 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
       };
     } else {
       newPage = {
-        ...newPage,
+        id: `page-${Date.now()}`,
         pageTitle: 'Executive Summary',
-        freeformData: {
+        type: 'freeform',
+        data: {
           heading: 'Executive Summary',
           content: 'Add your custom proposal narrative here.'
         }
@@ -326,7 +332,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
               </span>
             </div>
 
-            {/* COVER PAGE FORM */}
+{/* COVER PAGE FORM */}
             {activePage.type === 'cover' && (
               <div className="space-y-4">
                 <div>
@@ -335,12 +341,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </label>
                   <textarea
                     rows={2}
-                    value={activePage.coverData?.mainTitle || ''}
+                    value={activePage.data?.mainTitle || ''}
                     onChange={(e) =>
                       updateActivePage({
                         ...activePage,
-                        coverData: {
-                          ...activePage.coverData!,
+                        data: {
+                          ...activePage.data!,
                           mainTitle: e.target.value
                         }
                       })
@@ -356,12 +362,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={activePage.coverData?.clientName || ''}
+                      value={activePage.data?.clientName || ''}
                       onChange={(e) =>
                         updateActivePage({
                           ...activePage,
-                          coverData: {
-                            ...activePage.coverData!,
+                          data: {
+                            ...activePage.data!,
                             clientName: e.target.value
                           }
                         })
@@ -371,27 +377,27 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </div>
 
 <div>
-                  <label className="text-xs font-semibold text-slate-500 block mb-1">
-                    Client Role / Designation
-                  </label>
-                  <input
-                    type="text"
-                    value={activePage.coverData?.clientRole || ''}
-                    onChange={(e) =>
-                      updateActivePage({
-                        ...activePage,
-                        coverData: {
-                          ...activePage.coverData!,
-                          clientRole: e.target.value
-                        }
-                      })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
-                  />
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Client Role / Designation
+                    </label>
+                    <input
+                      type="text"
+                      value={activePage.data?.clientRole || ''}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          data: {
+                            ...activePage.data!,
+                            clientRole: e.target.value
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
             {/* CATEGORY TABLE FORM */}
             {activePage.type === 'category-table' && (
@@ -403,12 +409,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={activePage.tableData?.categoryTitle || 'CATEGORY'}
+                      value={activePage.data?.categoryTitle || 'CATEGORY'}
                       onChange={(e) =>
                         updateActivePage({
                           ...activePage,
-                          tableData: {
-                            ...activePage.tableData!,
+                          data: {
+                            ...activePage.data!,
                             categoryTitle: e.target.value
                           }
                         })
@@ -423,12 +429,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={activePage.tableData?.detailsTitle || 'DETAILS'}
+                      value={activePage.data?.detailsTitle || 'DETAILS'}
                       onChange={(e) =>
                         updateActivePage({
                           ...activePage,
-                          tableData: {
-                            ...activePage.tableData!,
+                          data: {
+                            ...activePage.data!,
                             detailsTitle: e.target.value
                           }
                         })
@@ -442,12 +448,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                      Table Rows ({activePage.tableData?.rows.length || 0})
+                      Table Rows ({activePage.data?.rows.length || 0})
                     </label>
                     <button
                       type="button"
                       onClick={() => {
-                        const currentRows = activePage.tableData?.rows || [];
+                        const currentRows = activePage.data?.rows || [];
                         const newRow: CategoryTableRow = {
                           id: `r-${Date.now()}`,
                           category: 'New Category',
@@ -455,8 +461,8 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                         };
                         updateActivePage({
                           ...activePage,
-                          tableData: {
-                            ...activePage.tableData!,
+                          data: {
+                            ...activePage.data!,
                             rows: [...currentRows, newRow]
                           }
                         });
@@ -469,7 +475,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </div>
 
                   <div className="space-y-3">
-                    {activePage.tableData?.rows.map((row, rIdx) => (
+                    {activePage.data?.rows.map((row, rIdx) => (
                       <div
                         key={row.id}
                         className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
@@ -480,11 +486,11 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                             placeholder="Category Name"
                             value={row.category}
                             onChange={(e) => {
-                              const updatedRows = [...activePage.tableData!.rows];
+                              const updatedRows = [...activePage.data!.rows];
                               updatedRows[rIdx].category = e.target.value;
                               updateActivePage({
                                 ...activePage,
-                                tableData: { ...activePage.tableData!, rows: updatedRows }
+                                data: { ...activePage.data!, rows: updatedRows }
                               });
                             }}
                             className="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
@@ -493,12 +499,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              const updatedRows = activePage.tableData!.rows.filter(
+                              const updatedRows = activePage.data!.rows.filter(
                                 (_, idx) => idx !== rIdx
                               );
                               updateActivePage({
                                 ...activePage,
-                                tableData: { ...activePage.tableData!, rows: updatedRows }
+                                data: { ...activePage.data!, rows: updatedRows }
                               });
                             }}
                             className="text-slate-400 hover:text-red-500 p-1"
@@ -512,11 +518,11 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                           placeholder="Details (Use bullet points starting with • or newlines)"
                           value={row.details}
                           onChange={(e) => {
-                            const updatedRows = [...activePage.tableData!.rows];
+                            const updatedRows = [...activePage.data!.rows];
                             updatedRows[rIdx].details = e.target.value;
                             updateActivePage({
                               ...activePage,
-                              tableData: { ...activePage.tableData!, rows: updatedRows }
+                              data: { ...activePage.data!, rows: updatedRows }
                             });
                           }}
                           className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
@@ -537,12 +543,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={activePage.pricingData?.highlightBoxTitle || ''}
+                    value={activePage.data?.highlightBoxTitle || ''}
                     onChange={(e) =>
                       updateActivePage({
                         ...activePage,
-                        pricingData: {
-                          ...activePage.pricingData!,
+                        data: {
+                          ...activePage.data!,
                           highlightBoxTitle: e.target.value
                         }
                       })
@@ -558,12 +564,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={activePage.pricingData?.highlightBoxSubtitle || ''}
+                    value={activePage.data?.highlightBoxSubtitle || ''}
                     onChange={(e) =>
                       updateActivePage({
                         ...activePage,
-                        pricingData: {
-                          ...activePage.pricingData!,
+                        data: {
+                          ...activePage.data!,
                           highlightBoxSubtitle: e.target.value
                         }
                       })
@@ -577,12 +583,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                      Proposal Notes & Terms ({activePage.pricingData?.notes.length || 0})
+                      Proposal Notes & Terms ({activePage.data?.notes.length || 0})
                     </label>
                     <button
                       type="button"
                       onClick={() => {
-                        const currentNotes = activePage.pricingData?.notes || [];
+                        const currentNotes = activePage.data?.notes || [];
                         const newNote: PricingNote = {
                           id: `n-${Date.now()}`,
                           title: 'Extra Service',
@@ -590,8 +596,8 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                         };
                         updateActivePage({
                           ...activePage,
-                          pricingData: {
-                            ...activePage.pricingData!,
+                          data: {
+                            ...activePage.data!,
                             notes: [...currentNotes, newNote]
                           }
                         });
@@ -604,7 +610,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                   </div>
 
                   <div className="space-y-3">
-                    {activePage.pricingData?.notes.map((note, nIdx) => (
+                    {activePage.data?.notes.map((note, nIdx) => (
                       <div
                         key={note.id}
                         className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
@@ -614,11 +620,11 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                             type="text"
                             value={note.title}
                             onChange={(e) => {
-                              const updatedNotes = [...activePage.pricingData!.notes];
+                              const updatedNotes = [...activePage.data!.notes];
                               updatedNotes[nIdx].title = e.target.value;
                               updateActivePage({
                                 ...activePage,
-                                pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                                data: { ...activePage.data!, notes: updatedNotes }
                               });
                             }}
                             className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
@@ -626,12 +632,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              const updatedNotes = activePage.pricingData!.notes.filter(
+                              const updatedNotes = activePage.data!.notes.filter(
                                 (_, idx) => idx !== nIdx
                               );
                               updateActivePage({
                                 ...activePage,
-                                pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                                data: { ...activePage.data!, notes: updatedNotes }
                               });
                             }}
                             className="text-slate-400 hover:text-red-500 p-1"
@@ -644,11 +650,11 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                           rows={2}
                           value={note.description}
                           onChange={(e) => {
-                            const updatedNotes = [...activePage.pricingData!.notes];
+                            const updatedNotes = [...activePage.data!.notes];
                             updatedNotes[nIdx].description = e.target.value;
                             updateActivePage({
                               ...activePage,
-                              pricingData: { ...activePage.pricingData!, notes: updatedNotes }
+                              data: { ...activePage.data!, notes: updatedNotes }
                             });
                           }}
                           className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
@@ -664,12 +670,12 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
             {activePage.type === 'freeform' && (
               <SplitEditor
                 originalContent={freeformOriginalContent}
-                editedContent={activePage.freeformData?.content || ''}
+                editedContent={activePage.data?.content || ''}
                 onChange={(content) =>
                   updateActivePage({
                     ...activePage,
-                    freeformData: {
-                      heading: activePage.freeformData?.heading || 'Executive Summary',
+                    data: {
+                      heading: activePage.data?.heading || 'Executive Summary',
                       content
                     }
                   })
@@ -795,41 +801,19 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
                 Add Section Page
               </p>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleAddPage('category-table')}
-                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5 text-slate-900" />
-                  Category Table
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAddPage('pricing-highlight')}
-                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
-                >
-                  <DollarSign className="w-3.5 h-3.5 text-slate-900" />
-                  Pricing Highlight
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAddPage('deliverables-grid')}
-                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
-                >
-                  <Briefcase className="w-3.5 h-3.5 text-slate-900" />
-                  Deliverables
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAddPage('terms-signature')}
-                  className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
-                >
-                  <UserCheck className="w-3.5 h-3.5 text-slate-900" />
-                  Terms & Sign
-                </button>
+                {getPageRegistryEntries()
+                  .filter(({ type }) => type !== 'cover') // Cover page is typically only the first page
+                  .map(({ type, entry }) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => handleAddPage(type)}
+                      className="p-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all"
+                    >
+                      <entry.icon className="w-3.5 h-3.5 text-slate-900" />
+                      {entry.label}
+                    </button>
+                  ))}
               </div>
             </div>
           </div>

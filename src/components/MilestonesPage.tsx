@@ -8,7 +8,7 @@ interface MilestonesPageProps {
   pageTitle: string;
   agency: ProposalAgency;
   theme: ProposalTheme;
-  data?: MilestonesPageData;
+  data: MilestonesPageData;
   pageNumber?: number;
   totalPages?: number;
 }
@@ -21,7 +21,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({
   pageNumber,
   totalPages
 }) => {
-  const steps = data?.steps || [];
+  const steps = data.steps || [];
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
