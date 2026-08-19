@@ -289,7 +289,7 @@ export function migrateProposalPage(oldPage: LegacyProposalPage): ProposalPage {
             rows: [],
           },
           pricing: oldPage.pricingData ?? {
-            highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+highlightBoxTitle: 'Monthly – ₹4,999 + 18% GST',
             highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
             notesHeader: 'Note',
             notes: [],

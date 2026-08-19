@@ -104,11 +104,11 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
         pageTitle: 'Investment & Terms',
         type: 'pricing-highlight',
         data: {
-          highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+          highlightBoxTitle: 'Monthly – ₹4,999 + 18% GST',
           highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
           notesHeader: 'Note',
           notes: [
-            { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+            { id: 'n1', title: 'Payment Terms', description: 'One service per month.' }
           ]
         }
       };
@@ -117,21 +117,21 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
         id: `page-${Date.now()}`,
         pageTitle: 'Scope & Investment',
         type: 'combined-table-pricing',
-        data: {
+data: {
           table: {
             categoryTitle: 'CATEGORY',
             detailsTitle: 'DETAILS',
             rows: [
-              { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+              { id: 'r1', category: 'New Category', details: '• Item description\n• Details line 2' },
               { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
             ]
           },
           pricing: {
-            highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+            highlightBoxTitle: 'Monthly – ₹4,999 + 18% GST',
             highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
             notesHeader: 'Note',
             notes: [
-              { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+              { id: 'n1', title: 'Payment Terms', description: 'One service per month.' }
             ]
           }
         }

@@ -24,7 +24,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({
   totalPages
 }) => {
   const legalTerms = data.legalTerms || 'This proposal constitutes a formal statement of work. Work shall commence upon receipt of the initial deposit and signed agreement. Either party may terminate with 30 days written notice.';
-  const paymentTerms = data.paymentTerms || 'Invoices are payable within 15 days of issue. Late payments incur a 1.5% monthly service fee.';
+  const paymentTerms = data.paymentTerms || 'Invoices are payable within 15 days of issue. Late payments incur a 0.5% service fee per month.';
   const agencySignatoryName = data.agencySignatoryName || agency.name;
   const agencySignatoryTitle = data.agencySignatoryTitle || 'Authorized Representative';
   const clientSignatoryName = data.clientSignatoryName || client.name;

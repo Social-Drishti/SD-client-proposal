@@ -24,7 +24,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
   const customFooterText = theme.customFooterText || '';
 
   return (
-    <div className="relative z-10 pt-2 sm:pt-3 mt-auto flex items-center justify-between border-t border-slate-100 min-h-[28px] sm:min-h-[32px]">
+    <div className="relative z-10 flex items-center justify-between border-t border-slate-100 min-h-[32px] sm:min-h-[36px]">
       {/* Left: Footer Logo */}
       {footerLogoUrl ? (
         <div className="flex items-center gap-2">
@@ -39,17 +39,17 @@ export const PageFooter: React.FC<PageFooterProps> = ({
       ) : null}
 
       {/* Right: Agency Info or Custom Text */}
-      <div className="text-right flex-shrink-0 ml-auto">
+      <div className="flex items-center text-right flex-shrink-0 ml-auto">
         {customFooterText ? (
           <p className="text-[10px] font-semibold text-slate-500">{customFooterText}</p>
         ) : (
           <>
-            <p className="text-[10px] font-bold text-slate-700">{agency.name}</p>
+            <p className="text-[10px] font-bold text-slate-700 ml-2">{agency.name}</p>
             {agency.tagline && (
-              <p className="text-[9px] font-medium text-slate-400 mt-0.5">{agency.tagline}</p>
+              <p className="text-[9px] font-medium text-slate-400 ml-2 mt-0.5">{agency.tagline}</p>
             )}
             {(agency.website || agency.email) && (
-              <p className="text-[9px] text-slate-400 mt-0.5">{agency.website || agency.email}</p>
+              <p className="text-[9px] text-slate-400 ml-2 mt-0.5">{agency.website || agency.email}</p>
             )}
           </>
         )}

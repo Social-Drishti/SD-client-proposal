@@ -48,11 +48,11 @@ export const PAGE_REGISTRY: Record<PageType, PageRegistryEntry> = {
     label: 'Pricing Highlight',
     icon: DollarSign,
     defaultData: (): PricingPageData => ({
-      highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+      highlightBoxTitle: 'Monthly – ₹4,999 + 18% GST',
       highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
       notesHeader: 'Note',
       notes: [
-        { id: `n-${Date.now()}`, title: 'Payment Terms', description: 'Invoices issued monthly in advance.' },
+        { id: `n-${Date.now()}`, title: 'Payment Terms', description: 'One service per month.' },
       ],
     }),
   },
@@ -117,7 +117,7 @@ export const PAGE_REGISTRY: Record<PageType, PageRegistryEntry> = {
         ],
       },
       pricing: {
-        highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+        highlightBoxTitle: 'Monthly – ₹4,999 + 18% GST',
         highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
         notesHeader: 'Note',
         notes: [
