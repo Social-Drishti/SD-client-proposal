@@ -142,13 +142,29 @@ async function startServer() {
   });
 
   // PDF Export Queue Setup
-  const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-  const redis = new Redis(REDIS_URL, { maxRetriesPerRequest: 3 });
-  const exportQueue = new Queue('pdf-export', { connection: redis });
+  let redis: Redis | null = null;
+  let exportQueue: Queue | null = null;
+
+  try {
+    const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+    redis = new Redis(REDIS_URL, { maxRetriesPerRequest: 3 });
+    exportQueue = new Queue('pdf-export', { connection: redis });
+    // Test connection
+    await redis.ping();
+    console.log('Redis connected successfully');
+  } catch (error) {
+    console.warn('Redis connection failed - PDF export functionality will be disabled');
+    console.warn('Set REDIS_URL env var to connect to a Redis instance, or ignore this warning');
+    redis = null;
+    exportQueue = null;
+  }
 
   // POST /api/export/pdf - Create PDF export job
   app.post('/api/export/pdf', async (req, res) => {
     try {
+      if (!exportQueue) {
+        return res.status(503).json({ error: 'PDF export service unavailable - Redis not configured' });
+      }
       const { proposal, filename, options } = req.body;
 
       if (!proposal) {
@@ -172,6 +188,9 @@ async function startServer() {
   // GET /api/export/status/:jobId - Check job status
   app.get('/api/export/status/:jobId', async (req, res) => {
     try {
+      if (!exportQueue) {
+        return res.status(503).json({ error: 'PDF export service unavailable - Redis not configured' });
+      }
       const { jobId } = req.params;
       const job = await exportQueue.getJob(jobId);
 
@@ -200,6 +219,9 @@ async function startServer() {
   // GET /api/export/download/:jobId - Download generated PDF
   app.get('/api/export/download/:jobId', async (req, res) => {
     try {
+      if (!exportQueue) {
+        return res.status(503).json({ error: 'PDF export service unavailable - Redis not configured' });
+      }
       const { jobId } = req.params;
       const job = await exportQueue.getJob(jobId);
 

@@ -690,6 +690,287 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
               </div>
             )}
 
+            {/* COMBINED TABLE + PRICING FORM */}
+            {activePage.type === 'combined-table-pricing' && (
+              <div className="space-y-4">
+                {/* --- TABLE SECTION --- */}
+                <div>
+                  <h5 className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3">Table Settings</h5>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Left Column Title
+                    </label>
+                    <input
+                      type="text"
+                      value={(activePage.data as any)?.table?.categoryTitle || 'CATEGORY'}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          data: {
+                            ...activePage.data!,
+                            table: { ...(activePage.data as any).table, categoryTitle: e.target.value }
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 block mb-1">
+                      Right Column Title
+                    </label>
+                    <input
+                      type="text"
+                      value={(activePage.data as any)?.table?.detailsTitle || 'DETAILS'}
+                      onChange={(e) =>
+                        updateActivePage({
+                          ...activePage,
+                          data: {
+                            ...activePage.data!,
+                            table: { ...(activePage.data as any).table, detailsTitle: e.target.value }
+                          }
+                        })
+                      }
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Table Rows Editor */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                      Table Rows ({(activePage.data as any)?.table?.rows?.length || 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const table = (activePage.data as any).table;
+                        const currentRows = table?.rows || [];
+                        const newRow: CategoryTableRow = {
+                          id: `r-${Date.now()}`,
+                          category: 'New Category',
+                          details: '• Item description\n• Details line 2'
+                        };
+                        updateActivePage({
+                          ...activePage,
+                          data: {
+                            ...activePage.data!,
+                            table: { ...table, rows: [...currentRows, newRow] }
+                          }
+                        });
+                      }}
+                      className="py-1 px-2.5 bg-black hover:bg-slate-800 text-white rounded-md text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Row
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(activePage.data as any)?.table?.rows?.map((row: CategoryTableRow, rIdx: number) => (
+                      <div
+                        key={row.id}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Category Name"
+                            value={row.category}
+                            onChange={(e) => {
+                              const table = (activePage.data as any).table;
+                              const updatedRows = [...table.rows];
+                              updatedRows[rIdx] = { ...updatedRows[rIdx], category: e.target.value };
+                              updateActivePage({
+                                ...activePage,
+                                data: { ...activePage.data!, table: { ...table, rows: updatedRows } }
+                              });
+                            }}
+                            className="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const table = (activePage.data as any).table;
+                              const updatedRows = table.rows.filter(
+                                (_: any, idx: number) => idx !== rIdx
+                              );
+                              updateActivePage({
+                                ...activePage,
+                                data: { ...activePage.data!, table: { ...table, rows: updatedRows } }
+                              });
+                            }}
+                            className="text-slate-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={3}
+                          placeholder="Details (Use bullet points starting with • or newlines)"
+                          value={row.details}
+                          onChange={(e) => {
+                            const table = (activePage.data as any).table;
+                            const updatedRows = [...table.rows];
+                            updatedRows[rIdx] = { ...updatedRows[rIdx], details: e.target.value };
+                            updateActivePage({
+                              ...activePage,
+                              data: { ...activePage.data!, table: { ...table, rows: updatedRows } }
+                            });
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* --- DIVIDER --- */}
+                <div className="border-t border-slate-200 pt-4 mt-4" />
+
+                {/* --- PRICING SECTION --- */}
+                <div>
+                  <h5 className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3">Pricing Settings</h5>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Highlighted Commercial Box Title
+                  </label>
+                  <input
+                    type="text"
+                    value={(activePage.data as any)?.pricing?.highlightBoxTitle || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        data: {
+                          ...activePage.data!,
+                          pricing: { ...(activePage.data as any).pricing, highlightBoxTitle: e.target.value }
+                        }
+                      })
+                    }
+                    placeholder="Monthly – $2,500 + Taxes"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Highlight Box Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={(activePage.data as any)?.pricing?.highlightBoxSubtitle || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        data: {
+                          ...activePage.data!,
+                          pricing: { ...(activePage.data as any).pricing, highlightBoxSubtitle: e.target.value }
+                        }
+                      })
+                    }
+                    placeholder="(Minimum Lock-in Period 6 Months)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                {/* Pricing Notes Editor */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                      Proposal Notes & Terms ({(activePage.data as any)?.pricing?.notes?.length || 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const pricing = (activePage.data as any).pricing;
+                        const currentNotes = pricing?.notes || [];
+                        const newNote: PricingNote = {
+                          id: `n-${Date.now()}`,
+                          title: 'Extra Service',
+                          description: 'Scope conditions and approval terms.'
+                        };
+                        updateActivePage({
+                          ...activePage,
+                          data: {
+                            ...activePage.data!,
+                            pricing: { ...pricing, notes: [...currentNotes, newNote] }
+                          }
+                        });
+                      }}
+                      className="py-1 px-2.5 bg-black hover:bg-slate-800 text-white rounded-md text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Note
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(activePage.data as any)?.pricing?.notes?.map((note: PricingNote, nIdx: number) => (
+                      <div
+                        key={note.id}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            value={note.title}
+                            onChange={(e) => {
+                              const pricing = (activePage.data as any).pricing;
+                              const updatedNotes = [...pricing.notes];
+                              updatedNotes[nIdx] = { ...updatedNotes[nIdx], title: e.target.value };
+                              updateActivePage({
+                                ...activePage,
+                                data: { ...activePage.data!, pricing: { ...pricing, notes: updatedNotes } }
+                              });
+                            }}
+                            className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const pricing = (activePage.data as any).pricing;
+                              const updatedNotes = pricing.notes.filter(
+                                (_: any, idx: number) => idx !== nIdx
+                              );
+                              updateActivePage({
+                                ...activePage,
+                                data: { ...activePage.data!, pricing: { ...pricing, notes: updatedNotes } }
+                              });
+                            }}
+                            className="text-slate-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={2}
+                          value={note.description}
+                          onChange={(e) => {
+                            const pricing = (activePage.data as any).pricing;
+                            const updatedNotes = [...pricing.notes];
+                            updatedNotes[nIdx] = { ...updatedNotes[nIdx], description: e.target.value };
+                            updateActivePage({
+                              ...activePage,
+                              data: { ...activePage.data!, pricing: { ...pricing, notes: updatedNotes } }
+                            });
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* FREEFORM TEXT FORM - Side-by-Side Editor */}
             {activePage.type === 'freeform' && (
               <SplitEditor

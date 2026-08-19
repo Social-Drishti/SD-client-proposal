@@ -164,7 +164,7 @@
     opacity: 1 !important;
     height: auto !important;
     min-height: 297mm !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     position: relative !important;
     page-break-after: always;
     flex-shrink: 0 !important;
@@ -182,6 +182,8 @@
     border-radius: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    position: relative !important;
+    overflow: hidden !important;
   }
 
   /* --- Prevent breaks inside critical layout elements --- */
@@ -198,7 +200,12 @@
   [class*="card"],
   .grid,
   [class*="col-span"],
-  [class*="row-span"] {
+  [class*="row-span"],
+  p,
+  .prose,
+  .whitespace-pre-wrap,
+  [class*="text-"],
+  [class*="font-"] {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -228,5 +235,13 @@
   @page {
     size: A4 portrait;
     margin: 0;
+  }
+
+  /* --- Constrain all images within page boundaries --- */
+  img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: auto !important;
+    display: block !important;
   }
 }
