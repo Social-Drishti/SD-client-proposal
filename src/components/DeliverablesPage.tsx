@@ -12,6 +12,7 @@ interface DeliverablesPageProps {
   data: DeliverablesPageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const DeliverablesPage: React.FC<DeliverablesPageProps> = ({
@@ -20,7 +21,8 @@ export const DeliverablesPage: React.FC<DeliverablesPageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const items = data.items || [];
 
@@ -67,12 +69,12 @@ export const DeliverablesPage: React.FC<DeliverablesPageProps> = ({
         </div>
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

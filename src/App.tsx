@@ -10,43 +10,14 @@ import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
 import { ExportProgressModal } from './components/ExportProgressModal';
 import { PrintLayout } from './components/PrintLayout';
-import { exportProposalToPdf, ExportProgressDetail } from './lib/pdfGenerator';
+import { exportProposalToPdf, exportProposalToPdfViaServer, ExportProgressDetail } from './lib/pdfGenerator';
 import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
 function AppContent() {
   const isPrintRoute = window.location.pathname.startsWith('/print/');
-  const [printProposal, setPrintProposal] = useState<Proposal | null>(null);
-
-  useEffect(() => {
-    if (isPrintRoute) {
-      const hash = window.location.hash;
-      if (hash && (hash.includes('#proposal=') || hash.includes('#share='))) {
-        try {
-          const encodedData = hash.replace('#proposal=', '').replace('#share=', '');
-          const jsonString = decodeURIComponent(encodedData);
-          const parsed: any = JSON.parse(jsonString);
-          if (parsed && parsed.title && parsed.pages) {
-            setPrintProposal(parsed);
-          }
-        } catch (e) {
-          console.error('Failed to parse proposal for print route', e);
-        }
-      }
-    }
-  }, [isPrintRoute]);
 
   if (isPrintRoute) {
-    if (!printProposal) {
-      return (
-        <div className="min-h-screen bg-white flex items-center justify-center font-jakarta">
-          <div className="text-center p-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent mx-auto mb-4" />
-            <p className="text-slate-600">Loading proposal for print...</p>
-          </div>
-        </div>
-      );
-    }
-    return <PrintLayout proposal={printProposal} />;
+    return <PrintLayout />;
   }
 
   const {
@@ -385,8 +356,17 @@ function AppContent() {
   // Native Browser Print - Opens PrintLayout in a popup so ALL pages are printed
   const handlePrintNative = useCallback(() => {
     const proposalJson = JSON.stringify(activeProposal);
-    const encoded = encodeURIComponent(proposalJson);
-    const printUrl = `${window.location.origin}/print/native#proposal=${encoded}`;
+    
+    // Store proposal in sessionStorage to avoid URL length limits
+    try {
+      sessionStorage.setItem('print-proposal-data', proposalJson);
+    } catch (e) {
+      console.warn('Failed to store proposal in sessionStorage:', e);
+      showToast('Proposal too large for print. Try PDF download instead.');
+      return;
+    }
+    
+    const printUrl = `${window.location.origin}/print/native`;
     const popup = window.open(printUrl, '_blank', 'width=900,height=1200,scrollbars=yes');
 
     if (!popup) {
@@ -394,39 +374,83 @@ function AppContent() {
       return;
     }
 
+    // Extended timeout for complex proposals
     const printTimeout = setTimeout(() => {
       try {
         popup.print();
       } catch (e) {
-        console.error('Print failed:', e);
+        console.error('Print failed (timeout):', e);
+        showToast('Print timed out. Trying PDF download...');
+        handlePrintFallback();
       }
-    }, 8000);
+    }, 30000); // 30 seconds for large proposals
 
-    popup.addEventListener('load', () => {
-      const checkReady = setInterval(() => {
-        if (popup.document.querySelector('[data-print-ready="true"]')) {
-          clearInterval(checkReady);
-          clearTimeout(printTimeout);
-          setTimeout(() => {
-            try {
-              popup.print();
-            } catch (e) {
-              console.error('Print failed:', e);
-            }
-          }, 500);
-        }
-      }, 200);
+    let checkReadyInterval: ReturnType<typeof setInterval> | null = null;
+    let hasPrinted = false;
 
+    const triggerPrint = () => {
+      if (hasPrinted) return;
+      hasPrinted = true;
+      if (checkReadyInterval) clearInterval(checkReadyInterval);
+      clearTimeout(printTimeout);
       setTimeout(() => {
-        clearInterval(checkReady);
-        clearTimeout(printTimeout);
         try {
           popup.print();
         } catch (e) {
-          console.error('Print fallback failed:', e);
+          console.error('Print failed:', e);
+          showToast('Print failed. Trying PDF download...');
+          handlePrintFallback();
         }
-      }, 15000);
+      }, 500);
+    };
+
+    const handlePrintFallback = async () => {
+      try {
+        // Fallback to server-side PDF generation
+        const { exportProposalToPdfViaServer } = await import('./lib/pdfGenerator');
+        const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
+        await exportProposalToPdfViaServer(activeProposal, filename);
+        showToast('PDF downloaded as fallback');
+      } catch (e) {
+        console.error('Server PDF fallback failed:', e);
+        showToast('Print and PDF download both failed. Please try again.');
+      }
+    };
+
+    popup.addEventListener('load', () => {
+      checkReadyInterval = setInterval(() => {
+        try {
+          if (popup.document.querySelector('[data-print-ready="true"]')) {
+            triggerPrint();
+          }
+        } catch (e) {
+          // Cross-origin or popup closed
+          clearInterval(checkReadyInterval!);
+          clearTimeout(printTimeout);
+        }
+      }, 200);
+
+      // Fallback timeout - if ready never fires, try print anyway
+      setTimeout(() => {
+        if (!hasPrinted) {
+          clearInterval(checkReadyInterval!);
+          clearTimeout(printTimeout);
+          triggerPrint();
+        }
+      }, 30000); // Match the main timeout
     });
+
+    // Handle popup closed before print
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        clearInterval(checkReadyInterval!);
+        clearTimeout(printTimeout);
+        if (!hasPrinted) {
+          sessionStorage.removeItem('print-proposal-data');
+        }
+      }
+    }, 500);
   }, [activeProposal, showToast]);
 
   // Direct client-side PDF download (html2canvas + jsPDF)

@@ -11,6 +11,7 @@ interface FreeformPageProps {
   data: FreeformPageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const FreeformPage: React.FC<FreeformPageProps> = ({
@@ -19,7 +20,8 @@ export const FreeformPage: React.FC<FreeformPageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const content = data.content || 'Add custom proposal text, executive summaries, or brand background here.';
 
@@ -36,12 +38,12 @@ export const FreeformPage: React.FC<FreeformPageProps> = ({
         </div>
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

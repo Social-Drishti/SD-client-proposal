@@ -105,14 +105,14 @@ export type ProposalPageData =
   | FreeformPageData;
 
 export type ProposalPage =
-  | { id: string; pageTitle: string; type: 'cover'; data: CoverPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'category-table'; data: TablePageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'pricing-highlight'; data: PricingPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'terms-signature'; data: TermsPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'freeform'; data: FreeformPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'combined-table-pricing'; data: CombinedTablePricingData; accentBarColor?: string };
+  | { id: string; pageTitle: string; type: 'cover'; data: CoverPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'category-table'; data: TablePageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'pricing-highlight'; data: PricingPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'terms-signature'; data: TermsPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'freeform'; data: FreeformPageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'combined-table-pricing'; data: CombinedTablePricingData; accentBarColor?: string; footerNumber?: string };
 
 export interface ProposalAgency {
   name: string;

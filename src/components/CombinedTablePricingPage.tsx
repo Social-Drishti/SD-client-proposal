@@ -11,6 +11,7 @@ interface CombinedTablePricingPageProps {
   data: CombinedTablePricingData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const CombinedTablePricingPage: React.FC<CombinedTablePricingPageProps> = ({
@@ -19,7 +20,8 @@ export const CombinedTablePricingPage: React.FC<CombinedTablePricingPageProps> =
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const { table, pricing } = data;
   const categoryHeader = table.categoryTitle || 'CATEGORY';
@@ -136,6 +138,7 @@ export const CombinedTablePricingPage: React.FC<CombinedTablePricingPageProps> =
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

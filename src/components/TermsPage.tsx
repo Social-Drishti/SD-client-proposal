@@ -12,6 +12,7 @@ interface TermsPageProps {
   data: TermsPageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const TermsPage: React.FC<TermsPageProps> = ({
@@ -21,7 +22,8 @@ export const TermsPage: React.FC<TermsPageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const legalTerms = data.legalTerms || 'This proposal constitutes a formal statement of work. Work shall commence upon receipt of the initial deposit and signed agreement. Either party may terminate with 30 days written notice.';
   const paymentTerms = data.paymentTerms || 'Invoices are payable within 15 days of issue. Late payments incur a 0.5% service fee per month.';
@@ -98,12 +100,12 @@ export const TermsPage: React.FC<TermsPageProps> = ({
         </div>
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

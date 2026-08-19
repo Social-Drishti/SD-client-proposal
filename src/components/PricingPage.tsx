@@ -11,6 +11,7 @@ interface PricingPageProps {
   data: PricingPageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const PricingPage: React.FC<PricingPageProps> = ({
@@ -19,7 +20,8 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const highlightTitle = data.highlightBoxTitle || 'Monthly – INR 1,00,000 + 18% GST';
   const highlightSubtitle = data.highlightBoxSubtitle || '(Minimum Lock-in Period 6 Months)';
@@ -66,12 +68,12 @@ export const PricingPage: React.FC<PricingPageProps> = ({
         )}
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

@@ -51,6 +51,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -66,6 +67,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -81,6 +83,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -96,6 +99,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -111,6 +115,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -126,6 +131,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -141,6 +147,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }
@@ -156,6 +163,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             data={page.data}
             pageNumber={pageNumber}
             totalPages={totalPages}
+            footerNumber={page.footerNumber}
           />
         );
       }

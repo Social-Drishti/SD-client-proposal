@@ -11,6 +11,7 @@ interface MilestonesPageProps {
   data: MilestonesPageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const MilestonesPage: React.FC<MilestonesPageProps> = ({
@@ -19,7 +20,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const steps = data.steps || [];
 
@@ -64,12 +66,12 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({
         </div>
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

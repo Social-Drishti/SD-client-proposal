@@ -11,6 +11,7 @@ interface CategoryTablePageProps {
   data: TablePageData;
   pageNumber?: number;
   totalPages?: number;
+  footerNumber?: string;
 }
 
 export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
@@ -19,7 +20,8 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
   theme,
   data,
   pageNumber,
-  totalPages
+  totalPages,
+  footerNumber
 }) => {
   const categoryHeader = data.categoryTitle || 'CATEGORY';
   const detailsHeader = data.detailsTitle || 'DETAILS';
@@ -97,12 +99,12 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
         </div>
       </div>
 
-      {/* Page Footer */}
       <PageFooter
         agency={agency}
         theme={theme}
         pageNumber={pageNumber}
         totalPages={totalPages}
+        footerNumber={footerNumber}
       />
     </div>
   );

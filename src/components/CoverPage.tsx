@@ -5,12 +5,16 @@ import {
   CoverPageData,
   ProposalTheme,
 } from "../types";
+import { PageFooter } from "./PageFooter";
 
 interface CoverPageProps {
   agency: ProposalAgency;
   client: ProposalClient;
   data: CoverPageData;
   theme: ProposalTheme;
+  pageNumber?: number;
+  totalPages?: number;
+  footerNumber?: string;
 }
 
 export const CoverPage: React.FC<CoverPageProps> = ({
@@ -18,6 +22,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   client,
   data,
   theme,
+  pageNumber,
+  totalPages,
+  footerNumber,
 }) => {
   const mainTitle = data.mainTitle || "Client Proposal";
   const clientName = data.clientName || client.name;
@@ -94,35 +101,14 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         </div>
       </div>
 
-      {/* Bottom Footer Section: Prepared By */}
-      <div className="pt-4 sm:pt-6 border-t border-slate-100 flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-            PREPARED BY
-          </p>
-          <p className="text-sm font-bold text-slate-900">{agency.name}</p>
-          {agency.tagline && (
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">
-              {agency.tagline}
-            </p>
-          )}
-        </div>
-
-        <div className="text-right sm:text-right">
-          {theme.customFooterText ? (
-            <p className="text-xs font-semibold text-slate-500">{theme.customFooterText}</p>
-          ) : (
-            <>
-              <p className="text-xs font-semibold text-slate-500">
-                {agency.website || agency.email}
-              </p>
-              {agency.phone && (
-                <p className="text-xs text-slate-400 mt-0.5">{agency.phone}</p>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+      {/* Footer */}
+      <PageFooter
+        agency={agency}
+        theme={theme}
+        pageNumber={pageNumber}
+        totalPages={totalPages}
+        footerNumber={footerNumber}
+      />
     </div>
   );
 };

@@ -419,6 +419,24 @@ data: {
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
                     />
                   </div>
+</div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Footer Number
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.footerNumber || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        footerNumber: e.target.value
+                      })
+                    }
+                    placeholder="PROP-2026-001"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
                 </div>
               </div>
             )}
@@ -555,6 +573,24 @@ data: {
                     ))}
                   </div>
                 </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Footer Number
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.footerNumber || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        footerNumber: e.target.value
+                      })
+                    }
+                    placeholder="PROP-2026-001"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
               </div>
             )}
 
@@ -686,6 +722,24 @@ data: {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Footer Number
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.footerNumber || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        footerNumber: e.target.value
+                      })
+                    }
+                    placeholder="PROP-2026-001"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
                 </div>
               </div>
             )}
@@ -973,7 +1027,25 @@ data: {
 
             {/* FREEFORM TEXT FORM - Side-by-Side Editor */}
             {activePage.type === 'freeform' && (
-              <SplitEditor
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 block mb-1">
+                    Footer Number
+                  </label>
+                  <input
+                    type="text"
+                    value={activePage.footerNumber || ''}
+                    onChange={(e) =>
+                      updateActivePage({
+                        ...activePage,
+                        footerNumber: e.target.value
+                      })
+                    }
+                    placeholder="PROP-2026-001"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+                  />
+                </div>
+                <SplitEditor
                 originalContent={freeformOriginalContent}
                 editedContent={activePage.data?.content || ''}
                 onChange={(content) =>
@@ -988,11 +1060,30 @@ data: {
                 heading="Custom Page Content"
                 isMobile={isMobile}
               />
+              </div>
             )}
+
+            <div className="pt-4 border-t border-slate-200">
+              <label className="text-xs font-semibold text-slate-500 block mb-1">
+                Footer Number
+              </label>
+              <input
+                type="text"
+                value={activePage.footerNumber || ''}
+                onChange={(e) =>
+                  updateActivePage({
+                    ...activePage,
+                    footerNumber: e.target.value
+                  })
+                }
+                placeholder="PROP-2026-001"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:bg-white focus:border-black focus:outline-none"
+              />
+            </div>
           </div>
         )}
 
-        {/* TAB 2: STRUCTURE MANAGER */}
+      {/* TAB 2: STRUCTURE MANAGER */}
         {activeTab === 'pages' && (
           <div className="space-y-4">
             <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
