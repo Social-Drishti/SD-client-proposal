@@ -69,7 +69,7 @@ async function generatePdfFromProposal(job: Job<ExportJobData, ExportJobResult>)
     await page.emulateMediaType('print');
     
     // Set viewport to match A4 proportions for consistent layout
-    await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1.5 });
 
     // Navigate to print route with proposal data in hash
     const printUrl = `${BASE_URL}/print/${encodeURIComponent(jobId)}#proposal=${encodeURIComponent(proposalJson)}`;
@@ -88,6 +88,8 @@ async function generatePdfFromProposal(job: Job<ExportJobData, ExportJobResult>)
     // Additional wait for document.fonts.ready and layout stabilization
     await page.evaluate(async () => {
       await document.fonts.ready;
+      // Force layout recalculation
+      document.body.offsetHeight;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     });
     await job.updateProgress(65);

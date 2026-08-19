@@ -144,6 +144,21 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
           />
         );
       }
+      case 'combined-table-pricing': {
+        const entry = PAGE_REGISTRY['combined-table-pricing'];
+        const Component = entry.component;
+        return (
+          <Component
+            pageTitle={page.pageTitle}
+            agency={agency}
+            client={client}
+            theme={theme}
+            data={page.data}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+          />
+        );
+      }
       default: {
         const _exhaustive: never = page as never;
         throw new Error(`Unhandled page type`);

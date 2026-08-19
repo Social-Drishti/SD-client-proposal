@@ -2,6 +2,58 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { Proposal } from '../types';
 
+function oklchToRgb(oklch: string): string {
+  const match = oklch.match(/oklch\(([^)]+)\)/);
+  if (!match) return '#808080';
+  
+  const parts = match[1].trim().split(/\s+/);
+  if (parts.length < 3) return '#808080';
+  
+  let L = parseFloat(parts[0]);
+  let C = parseFloat(parts[1]);
+  let h = parseFloat(parts[2]);
+  
+  if (parts[0].endsWith('%')) L = L / 100;
+  if (parts[1].endsWith('%')) C = C / 100;
+  
+  let alpha = 1;
+  if (parts.length > 3) {
+    const alphaPart = parts[3].replace('/', '').trim();
+    alpha = alphaPart.endsWith('%') ? parseFloat(alphaPart) / 100 : parseFloat(alphaPart);
+  }
+  
+  const hRad = (h * Math.PI) / 180;
+  const a = C * Math.cos(hRad);
+  const b = C * Math.sin(hRad);
+  
+  const L_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const M_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const S_ = L - 0.0894841775 * a - 1.2914855480 * b;
+  
+  const lrgb = [
+    Math.sign(L_) * Math.abs(L_) ** (1 / 0.4204473),
+    Math.sign(M_) * Math.abs(M_) ** (1 / 0.4204473),
+    Math.sign(S_) * Math.abs(S_) ** (1 / 0.4204473)
+  ];
+  
+  const rgb = [
+    + (4.0767416621 * lrgb[0] - 3.3077115913 * lrgb[1] + 0.2309699292 * lrgb[2]),
+    + (-1.2684380046 * lrgb[0] + 2.6097574011 * lrgb[1] - 0.3413193965 * lrgb[2]),
+    + (-0.0041960863 * lrgb[0] - 0.7034186147 * lrgb[1] + 1.7076147010 * lrgb[2])
+  ];
+  
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v * 255)));
+  const r = clamp(rgb[0]);
+  const g = clamp(rgb[1]);
+  const b_ = clamp(rgb[2]);
+  
+  return alpha < 1 ? `rgba(${r}, ${g}, ${b_}, ${alpha.toFixed(2)})` : `rgb(${r}, ${g}, ${b_})`;
+}
+
+function replaceOklchInString(str: string): string {
+  return str.replace(/oklch\([^)]*\)/g, (match) => oklchToRgb(match));
+}
+
 export interface ExportProgressDetail {
   progress: number;
   currentPage: number;
@@ -117,7 +169,7 @@ export async function exportProposalToPdf(
   // html2canvas has known limitations with Flex/Grid layouts, font rendering, and CSS transforms.
   // Prefer server-side Puppeteer (via exportProposalToPdfViaServer) or browser native print (window.print()).
   const {
-    scale = 3,
+    scale = 2,
     chunkSize = getChunkSize(
       Array.from(pagesContainerElement.querySelectorAll<HTMLElement>('.a4-page')).length
     ),
@@ -153,6 +205,13 @@ export async function exportProposalToPdf(
   // Wait for fonts to load (critical for preventing text overlap)
   try {
     await document.fonts.ready;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+    });
   } catch (e) {
     console.warn('Font loading wait failed:', e);
   }
@@ -213,14 +272,28 @@ export async function exportProposalToPdf(
             const styleEls = Array.from(clonedDoc.querySelectorAll('style'));
             styleEls.forEach((style) => {
               if (style.textContent && style.textContent.includes('oklch')) {
-                style.textContent = style.textContent.replace(/oklch\([^)]+\)/g, '#808080');
+                style.textContent = replaceOklchInString(style.textContent);
               }
             });
 
             const allElements = Array.from(clonedDoc.querySelectorAll<HTMLElement>('*'));
             allElements.forEach((el) => {
               if (el.style && el.style.cssText && el.style.cssText.includes('oklch')) {
-                el.style.cssText = el.style.cssText.replace(/oklch\([^)]+\)/g, '#808080');
+                el.style.cssText = replaceOklchInString(el.style.cssText);
+              }
+              
+              // Also check CSS custom properties (e.g., --accent-bar-color) for oklch values
+              const computedStyle = clonedDoc.defaultView?.getComputedStyle(el);
+              if (computedStyle) {
+                for (let i = 0; i < computedStyle.length; i++) {
+                  const propName = computedStyle[i];
+                  if (propName.startsWith('--')) {
+                    const propValue = computedStyle.getPropertyValue(propName);
+                    if (propValue.includes('oklch')) {
+                      el.style.setProperty(propName, replaceOklchInString(propValue));
+                    }
+                  }
+                }
               }
             });
 
@@ -230,7 +303,7 @@ export async function exportProposalToPdf(
               const style = htmlEl.style as CSSStyleDeclaration & Record<string, string>;
               style.webkitFontSmoothing = 'antialiased';
               style.mozOsxFontSmoothing = 'grayscale';
-              style.textRendering = 'optimizeLegibility';
+              style.textRendering = 'geometricPrecision';
             }
           }
         });

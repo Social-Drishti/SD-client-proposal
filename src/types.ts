@@ -12,7 +12,8 @@ export type PageType =
   | 'deliverables-grid'
   | 'milestones'
   | 'terms-signature'
-  | 'freeform';
+  | 'freeform'
+  | 'combined-table-pricing';
 
 export interface CategoryTableRow {
   id: string;
@@ -37,6 +38,11 @@ export interface PricingPageData {
   highlightBoxSubtitle: string;
   notesHeader: string;
   notes: PricingNote[];
+}
+
+export interface CombinedTablePricingData {
+  table: TablePageData;
+  pricing: PricingPageData;
 }
 
 export interface DeliverableItem {
@@ -105,7 +111,8 @@ export type ProposalPage =
   | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string }
   | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string }
   | { id: string; pageTitle: string; type: 'terms-signature'; data: TermsPageData; accentBarColor?: string }
-  | { id: string; pageTitle: string; type: 'freeform'; data: FreeformPageData; accentBarColor?: string };
+  | { id: string; pageTitle: string; type: 'freeform'; data: FreeformPageData; accentBarColor?: string }
+  | { id: string; pageTitle: string; type: 'combined-table-pricing'; data: CombinedTablePricingData; accentBarColor?: string };
 
 export interface ProposalAgency {
   name: string;
@@ -268,6 +275,25 @@ export function migrateProposalPage(oldPage: LegacyProposalPage): ProposalPage {
         data: oldPage.freeformData ?? {
           heading: 'Executive Summary',
           content: 'Add your custom proposal narrative here.',
+        },
+      };
+    }
+    case 'combined-table-pricing': {
+      const page = base as { id: string; pageTitle: string; type: 'combined-table-pricing'; accentBarColor?: string };
+      return {
+        ...page,
+        data: {
+          table: oldPage.tableData ?? {
+            categoryTitle: 'CATEGORY',
+            detailsTitle: 'DETAILS',
+            rows: [],
+          },
+          pricing: oldPage.pricingData ?? {
+            highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+            highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+            notesHeader: 'Note',
+            notes: [],
+          },
         },
       };
     }

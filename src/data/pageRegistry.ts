@@ -1,5 +1,5 @@
 import React from 'react';
-import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData } from '../types';
+import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData, CombinedTablePricingData } from '../types';
 import { CoverPage } from '../components/CoverPage';
 import { CategoryTablePage } from '../components/CategoryTablePage';
 import { PricingPage } from '../components/PricingPage';
@@ -7,7 +7,8 @@ import { DeliverablesPage } from '../components/DeliverablesPage';
 import { MilestonesPage } from '../components/MilestonesPage';
 import { TermsPage } from '../components/TermsPage';
 import { FreeformPage } from '../components/FreeformPage';
-import { FileText, Table, DollarSign, Briefcase, ListTodo, FilePen, FileType } from 'lucide-react';
+import { CombinedTablePricingPage } from '../components/CombinedTablePricingPage';
+import { FileText, Table, DollarSign, Briefcase, ListTodo, FilePen, FileType, LayoutGrid } from 'lucide-react';
 
 export interface PageRegistryEntry {
   component: React.ComponentType<{ pageTitle: string; agency: any; theme: any; data: any; pageNumber?: number; totalPages?: number; client?: any }>;
@@ -100,6 +101,29 @@ export const PAGE_REGISTRY: Record<PageType, PageRegistryEntry> = {
     defaultData: (): FreeformPageData => ({
       heading: 'Executive Summary',
       content: 'Add your custom proposal narrative here.',
+    }),
+  },
+  'combined-table-pricing': {
+    component: CombinedTablePricingPage,
+    label: 'Combined Table & Pricing',
+    icon: LayoutGrid,
+    defaultData: (): CombinedTablePricingData => ({
+      table: {
+        categoryTitle: 'CATEGORY',
+        detailsTitle: 'DETAILS',
+        rows: [
+          { id: `r-${Date.now()}-1`, category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+          { id: `r-${Date.now()}-2`, category: 'Strategy', details: 'Comprehensive approach and monitoring' },
+        ],
+      },
+      pricing: {
+        highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+        highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+        notesHeader: 'Note',
+        notes: [
+          { id: `n-${Date.now()}`, title: 'Payment Terms', description: 'Invoices issued monthly in advance.' },
+        ],
+      },
     }),
   },
 };

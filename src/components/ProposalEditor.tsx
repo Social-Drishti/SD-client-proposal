@@ -112,6 +112,30 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
           ]
         }
       };
+    } else if (type === 'combined-table-pricing') {
+      newPage = {
+        id: `page-${Date.now()}`,
+        pageTitle: 'Scope & Investment',
+        type: 'combined-table-pricing',
+        data: {
+          table: {
+            categoryTitle: 'CATEGORY',
+            detailsTitle: 'DETAILS',
+            rows: [
+              { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+              { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
+            ]
+          },
+          pricing: {
+            highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+            highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+            notesHeader: 'Note',
+            notes: [
+              { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+            ]
+          }
+        }
+      };
     } else if (type === 'deliverables-grid') {
       newPage = {
         id: `page-${Date.now()}`,
