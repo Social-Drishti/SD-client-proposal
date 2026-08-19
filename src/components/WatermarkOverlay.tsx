@@ -3,7 +3,7 @@ import { ProposalAgency, ProposalTheme } from "../types";
 
 interface WatermarkOverlayProps {
   theme: ProposalTheme;
-  agency: ProposalAgency;
+  agency: ProposalTheme;
 }
 
 export const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({
@@ -19,18 +19,18 @@ export const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({
     theme.headerLogoUrl ||
     agency.logoUrl ||
     agency.footerLogoUrl ||
-    "/SDLOGO.png";
+    "/SD-LOGO.png";
 
   const watermarkText = theme.watermarkText || agency.name || "CONFIDENTIAL";
   const opacity = theme.watermarkOpacity ?? 0.06;
 
   return (
-    <div className="absolute inset-0 pointer-events-none select-none z-0 flex items-center justify-center overflow-hidden p-8">
+    <div className="absolute top-0 left-0 right-0 h-16 pointer-events-none select-none z-0 flex items-center justify-center overflow-hidden">
       {watermarkType === "logo" && logoUrl ? (
         <img
           src={logoUrl}
           alt="Watermark"
-          className="w-3/4 max-w-xl max-h-[65%] object-contain transition-opacity"
+          className="h-6 sm:h-8 max-w-[120px] object-contain transition-opacity"
           style={{ opacity: opacity }}
           onError={(e) => {
             (e.target as HTMLImageElement).src = "/SD-LOGO.png";
