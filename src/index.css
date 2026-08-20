@@ -244,4 +244,19 @@
     height: auto !important;
     display: block !important;
   }
+
+  /* Preserve footer logo size during print/PDF */
+  img[alt="Footer Logo"] {
+    height: 1.5rem !important;
+    max-height: 1.5rem !important;
+    max-width: 120px !important;
+  }
+
+  @media (min-width: 640px) {
+    img[alt="Footer Logo"] {
+      height: 2rem !important;
+      max-height: 2rem !important;
+      max-width: 140px !important;
+    }
+  }
 }

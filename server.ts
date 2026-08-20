@@ -147,15 +147,25 @@ async function startServer() {
 
   try {
     const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-    redis = new Redis(REDIS_URL, { maxRetriesPerRequest: 3 });
+    redis = new Redis(REDIS_URL, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times) {
+        if (times > 3) return null;
+        return Math.min(times * 200, 2000);
+      },
+      lazyConnect: true,
+    });
+    await Promise.race([
+      redis.connect(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 5000)),
+    ]);
     exportQueue = new Queue('pdf-export', { connection: redis });
-    // Test connection
     await redis.ping();
     console.log('Redis connected successfully');
   } catch (error) {
     console.warn('Redis connection failed - PDF export functionality will be disabled');
-    console.warn('Set REDIS_URL env var to connect to a Redis instance, or ignore this warning');
-    redis = null;
+    console.warn('Set REDIS_URL env var to connect to a Redis instance');
+    if (redis) { redis.disconnect(); redis = null; }
     exportQueue = null;
   }
 
