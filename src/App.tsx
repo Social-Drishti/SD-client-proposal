@@ -333,7 +333,8 @@ function AppContent() {
 
   // Native Browser Print - Opens PrintLayout in a popup so ALL pages are printed
   const handlePrintNative = useCallback(() => {
-    
+    sessionStorage.setItem('print-proposal-data', JSON.stringify(activeProposal));
+
     const printUrl = `${window.location.origin}/print/native`;
     const popup = window.open(printUrl, '_blank', 'width=900,height=1200,scrollbars=yes');
 

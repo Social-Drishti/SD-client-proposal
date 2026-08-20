@@ -317,26 +317,6 @@ export function isLegacyProposal(proposal: any): proposal is LegacyProposal {
   return 'coverData' in firstPage || 'tableData' in firstPage || 'pricingData' in firstPage;
 }
 
-export interface ExportJobResponse {
-  jobId: string;
-  statusUrl: string;
-  downloadUrl: string;
-}
-
-export interface ExportJobStatus {
-  jobId: string;
-  status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed' | 'paused';
-  progress: number;
-  result?: { pdfPath: string; pdfSize: number };
-  error?: string;
-}
-
-export interface ServerExportOptions {
-  onProgress?: (detail: ExportProgressDetail) => void;
-  signal?: AbortSignal;
-  apiBaseUrl?: string;
-}
-
 export interface ExportProgressDetail {
   progress: number;
   currentPage: number;
