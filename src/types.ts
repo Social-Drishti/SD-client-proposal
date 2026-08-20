@@ -3,10 +3,7 @@ export type TemplateStyle =
   | 'navy-gold'
   | 'emerald-slate'
   | 'minimal-charcoal'
-  | 'creative-indigo'
-  | 'smm-scope'
-  | 'smm-operations'
-  | 'video-production';
+  | 'creative-indigo';
 
 export type PageType = 
   | 'cover'
@@ -16,7 +13,10 @@ export type PageType =
   | 'milestones'
   | 'terms-signature'
   | 'freeform'
-  | 'combined-table-pricing';
+  | 'combined-table-pricing'
+  | 'smm-scope'
+  | 'smm-operations'
+  | 'video-production';
 
 export interface CategoryTableRow {
   id: string;

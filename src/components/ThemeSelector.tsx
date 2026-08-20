@@ -24,30 +24,6 @@ const TEMPLATE_PRESETS: Array<{
     font: 'Plus Jakarta Sans'
   },
   {
-    id: 'smm-scope',
-    name: 'Social Media Management - Scope',
-    description: 'Teal and orange theme for social media management proposals',
-    primary: '#00838f',
-    accent: '#f59e0b',
-    font: 'Plus Jakarta Sans'
-  },
-  {
-    id: 'smm-operations',
-    name: 'Social Media Management - Operations',
-    description: 'Teal and orange theme for social media operations proposals',
-    primary: '#00838f',
-    accent: '#f59e0b',
-    font: 'Plus Jakarta Sans'
-  },
-  {
-    id: 'video-production',
-    name: 'Video Production',
-    description: 'Teal and orange theme for video production proposals',
-    primary: '#00838f',
-    accent: '#f59e0b',
-    font: 'Plus Jakarta Sans'
-  },
-  {
     id: 'navy-gold',
     name: 'Corporate Navy & Gold',
     description: 'Executive navy headers with rich amber gold highlights',
