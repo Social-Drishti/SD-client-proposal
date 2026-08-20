@@ -2,16 +2,13 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Proposal, PageType, ProposalPage } from './types';
 import { ProposalProvider, useProposalContext } from './context/ProposalContext';
 import { ViewProvider, useViewContext } from './context/ViewContext';
-import { ExportProvider, useExportContext } from './context/ExportContext';
 import { ProposalPageCanvas } from './components/ProposalPageCanvas';
 import { ProposalEditor } from './components/ProposalEditor';
 import { SwipeablePages } from './components/SwipeablePages';
 import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
-import { ExportProgressModal } from './components/ExportProgressModal';
 import { PrintLayout } from './components/PrintLayout';
-import { exportProposalToPdf, exportProposalToPdfViaServer, ExportProgressDetail } from './lib/pdfGenerator';
-import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Download, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
+import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
 
 function AppContent() {
   const isPrintRoute = window.location.pathname.startsWith('/print/');
@@ -50,21 +47,9 @@ function AppContent() {
     setFabMenuOpen,
   } = useViewContext();
 
-  const {
-    isExporting,
-    exportProgress,
-    exportProgressDetail,
-    abortController,
-    startExport,
-    cancelExport,
-    updateProgress,
-  } = useExportContext();
-
   const pagesContainerRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = React.useState<boolean>(false);
-  const [isExportProgressOpen, setIsExportProgressOpen] = React.useState<boolean>(false);
 
   // Show auto-dismissing toast message
   const showToast = useCallback((msg: string) => {
@@ -124,10 +109,6 @@ function AppContent() {
       // Escape: Close modals/sidebar
       if (e.key === 'Escape') {
         if (isShareModalOpen) setIsShareModalOpen(false);
-        if (isExportProgressOpen) {
-          abortControllerRef.current?.abort();
-          cancelExport();
-        }
         if (isMobile && sidebarOpen) setSidebarOpen(false);
       }
     };
@@ -141,7 +122,6 @@ function AppContent() {
     isMobile,
     sidebarOpen,
     isShareModalOpen,
-    isExportProgressOpen,
     canUndo,
     canRedo,
     undo,
@@ -149,9 +129,7 @@ function AppContent() {
     ctxSetActivePageIndex,
     togglePreviewMode,
     setSidebarOpen,
-    cancelExport,
     showToast,
-    isExportProgressOpen,
   ]);
 
   // Explicit Save callback (now mostly for toast feedback since autosave is automatic)
@@ -355,16 +333,6 @@ function AppContent() {
 
   // Native Browser Print - Opens PrintLayout in a popup so ALL pages are printed
   const handlePrintNative = useCallback(() => {
-    const proposalJson = JSON.stringify(activeProposal);
-    
-    // Store proposal in sessionStorage to avoid URL length limits
-    try {
-      sessionStorage.setItem('print-proposal-data', proposalJson);
-    } catch (e) {
-      console.warn('Failed to store proposal in sessionStorage:', e);
-      showToast('Proposal too large for print. Try PDF download instead.');
-      return;
-    }
     
     const printUrl = `${window.location.origin}/print/native`;
     const popup = window.open(printUrl, '_blank', 'width=900,height=1200,scrollbars=yes');
@@ -380,8 +348,7 @@ function AppContent() {
         popup.print();
       } catch (e) {
         console.error('Print failed (timeout):', e);
-        showToast('Print timed out. Trying PDF download...');
-        handlePrintFallback();
+        showToast('Print timed out. Please try again.');
       }
     }, 30000); // 30 seconds for large proposals
 
@@ -398,23 +365,9 @@ function AppContent() {
           popup.print();
         } catch (e) {
           console.error('Print failed:', e);
-          showToast('Print failed. Trying PDF download...');
-          handlePrintFallback();
+          showToast('Print failed. Please try again.');
         }
       }, 500);
-    };
-
-    const handlePrintFallback = async () => {
-      try {
-        // Fallback to server-side PDF generation
-        const { exportProposalToPdfViaServer } = await import('./lib/pdfGenerator');
-        const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
-        await exportProposalToPdfViaServer(activeProposal, filename);
-        showToast('PDF downloaded as fallback');
-      } catch (e) {
-        console.error('Server PDF fallback failed:', e);
-        showToast('Print and PDF download both failed. Please try again.');
-      }
     };
 
     popup.addEventListener('load', () => {
@@ -453,46 +406,6 @@ function AppContent() {
     }, 500);
   }, [activeProposal, showToast]);
 
-  // Direct client-side PDF download (html2canvas + jsPDF)
-  const handleDownloadPdf = useCallback(async () => {
-    abortControllerRef.current = new AbortController();
-    const filename = `${activeProposal.client.name.replace(/\s+/g, '_')}_Proposal.pdf`;
-
-    startExport({
-      progress: 0,
-      currentPage: 0,
-      totalPages: activeProposal.pages.length,
-      status: 'rendering'
-    });
-    setIsExportProgressOpen(true);
-
-    try {
-      // Direct client-side export - no server, no popup
-      if (!pagesContainerRef.current) throw new Error('Pages container not found');
-      await exportProposalToPdf(pagesContainerRef.current, filename, {
-        onProgress: (detail) => updateProgress(detail),
-        signal: abortControllerRef.current.signal,
-      });
-      showToast('PDF downloaded successfully!');
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        showToast('Export cancelled');
-        return;
-      }
-      console.error('Client-side export failed:', err);
-      showToast('Export failed: ' + err.message);
-    } finally {
-      cancelExport();
-      setTimeout(() => setIsExportProgressOpen(false), 1500);
-    }
-  }, [activeProposal, startExport, updateProgress, showToast]);
-
-  const handleCancelExport = useCallback(() => {
-    abortControllerRef.current?.abort();
-    cancelExport();
-    setIsExportProgressOpen(false);
-  }, [cancelExport]);
-
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] flex flex-col font-jakarta overflow-hidden">
       {/* Top Header Toolbar */}
@@ -509,26 +422,10 @@ function AppContent() {
         onPrintNative={handlePrintNative}
         zoomLevel={zoomLevel}
         onChangeZoom={setZoomLevel}
-        isExporting={isExporting}
-        exportProgress={exportProgress}
         previewModeOnly={previewModeOnly}
         onTogglePreviewMode={togglePreviewMode}
         splitView={splitView}
         onToggleSplitView={toggleSplitView}
-        onDownloadPdf={handleDownloadPdf}
-      />
-
-      {/* Export Progress Modal */}
-      <ExportProgressModal
-        isOpen={isExportProgressOpen}
-        onCancel={handleCancelExport}
-        progress={exportProgressDetail.progress}
-        currentPage={exportProgressDetail.currentPage}
-        totalPages={exportProgressDetail.totalPages}
-        status={exportProgressDetail.status}
-        errorMessage={exportProgressDetail.errorMessage}
-        estimatedTimeRemaining={exportProgressDetail.estimatedTimeRemaining}
-        isMobile={isMobile}
       />
 
       {/* Share & Import Modal */}
@@ -537,8 +434,6 @@ function AppContent() {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onImportProposal={handleImportProposal}
-        onDownloadPdf={handleDownloadPdf}
-        isExporting={isExporting}
       />
 
       {/* Main Studio Body */}
@@ -576,17 +471,6 @@ function AppContent() {
 
             {/* Right: Live Preview of Active Page Only */}
             <div className="flex-1 min-w-0 h-full overflow-y-auto bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
-              {isMobile && (
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  disabled={isExporting}
-                  className="no-print fixed bottom-6 right-6 z-30 p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800"
-                  aria-label="Download proposal as PDF"
-                >
-                  <Download className="w-5 h-5" />
-                </button>
-              )}
               <div
                 ref={pagesContainerRef}
                 className="print-area flex flex-col items-center w-full relative"
@@ -716,7 +600,6 @@ function AppContent() {
                       <button
                         type="button"
                         onClick={() => { handleCreateProposal(); setFabMenuOpen(false); }}
-                        disabled={isExporting}
                         className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
                         aria-label="New Proposal"
                       >
@@ -726,7 +609,6 @@ function AppContent() {
                       <button
                         type="button"
                         onClick={() => { handleDuplicateProposal(); setFabMenuOpen(false); }}
-                        disabled={isExporting}
                         className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
                         aria-label="Duplicate Proposal"
                       >
@@ -736,7 +618,6 @@ function AppContent() {
                       <button
                         type="button"
                         onClick={() => { handleAddPage('category-table'); setFabMenuOpen(false); }}
-                        disabled={isExporting}
                         className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
                         aria-label="Add Section"
                       >
@@ -746,7 +627,6 @@ function AppContent() {
                       <button
                         type="button"
                         onClick={() => { setIsShareModalOpen(true); setFabMenuOpen(false); }}
-                        disabled={isExporting}
                         className="p-3 bg-emerald-50 text-emerald-800 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-emerald-100 border border-emerald-200 min-w-[160px] justify-end"
                         aria-label="Share Proposal"
                       >
@@ -755,13 +635,12 @@ function AppContent() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { handleDownloadPdf(); setFabMenuOpen(false); }}
-                        disabled={isExporting}
+                        onClick={() => { handlePrintNative(); setFabMenuOpen(false); }}
                         className="p-3 bg-white text-slate-900 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium transition-all hover:bg-slate-50 min-w-[160px] justify-end"
-                        aria-label="Download PDF"
+                        aria-label="Print Proposal"
                       >
-                        <Download className="w-4 h-4" />
-                        <span>Download PDF</span>
+                        <Printer className="w-4 h-4" />
+                        <span>Print</span>
                       </button>
                     </div>
                   )}
@@ -771,12 +650,11 @@ function AppContent() {
                     type="button"
                     onClick={() => setFabMenuOpen(!fabMenuOpen)}
                     onContextMenu={(e) => { e.preventDefault(); setFabMenuOpen(!fabMenuOpen); }}
-                    disabled={isExporting}
-                    className={`p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all disabled:opacity-50 hover:bg-slate-800 ${fabMenuOpen ? 'rotate-45' : ''}`}
+                    className={`p-4 bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:bg-slate-800 ${fabMenuOpen ? 'rotate-45' : ''}`}
                     aria-label={fabMenuOpen ? 'Close actions' : 'Open actions'}
                     aria-expanded={fabMenuOpen}
                   >
-                    <Download className="w-5 h-5" />
+                    <Printer className="w-5 h-5" />
                   </button>
                 </div>
               )}
@@ -832,9 +710,7 @@ export function App() {
   return (
     <ProposalProvider>
       <ViewProvider>
-        <ExportProvider>
-          <AppContent />
-        </ExportProvider>
+        <AppContent />
       </ViewProvider>
     </ProposalProvider>
   );

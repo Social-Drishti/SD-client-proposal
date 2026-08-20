@@ -10,8 +10,7 @@ import {
   X,
   FileJson,
   Sparkles,
-  ExternalLink,
-  FileText
+  ExternalLink
 } from 'lucide-react';
 
 interface ShareModalProps {
@@ -19,17 +18,13 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportProposal: (importedProposal: Proposal) => void;
-  onDownloadPdf?: () => void;
-  isExporting?: boolean;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
   proposal,
   isOpen,
   onClose,
-  onImportProposal,
-  onDownloadPdf,
-  isExporting = false
+  onImportProposal
 }) => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
@@ -261,19 +256,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {activeTab === 'json' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600">
-                Download your proposal as a high-quality PDF or export the raw data:
+                Export your proposal data:
               </p>
-
-              {onDownloadPdf && (
-                <button
-                  onClick={() => { onDownloadPdf(); onClose(); }}
-                  disabled={isExporting}
-                  className="w-full p-3 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                >
-                  <FileText className="w-4 h-4" />
-                  {isExporting ? 'Exporting PDF...' : 'Download PDF'}
-                </button>
-              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <button
