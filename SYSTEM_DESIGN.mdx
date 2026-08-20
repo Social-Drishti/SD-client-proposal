@@ -16,11 +16,9 @@ A **React-based client proposal builder** that enables agencies to create, edit,
 | **Styling** | Tailwind CSS 4, CSS Variables |
 | **State** | React Hooks (useState, useEffect, useRef, useCallback) |
 | **Persistence** | localStorage (client-side only) |
-| **PDF Export** | html2canvas + jsPDF |
+| **PDF Export** | html2canvas + jsPDF (client-side) |
 | **Icons** | Lucide React |
 | **Animations** | Framer Motion |
-| **AI Integration** | @google/genai (optional) |
-| **Server** | Express + Vite dev middleware (SSR-ready) |
 
 ### Project Structure
 
@@ -219,10 +217,10 @@ const [isExportProgressOpen, setIsExportProgressOpen] = useState(false)
 # Install
 npm install
 
-# Dev (Vite + Express)
+# Dev (Vite)
 npm run dev
 
-# Build (client + server bundle)
+# Build
 npm run build
 
 # Preview production build
@@ -236,10 +234,8 @@ npm run lint
 
 ## Deployment Notes
 
-- **Static hosting**: `dist/` contains client assets + `server.cjs` for SSR
-- **Environment**: Requires `GEMINI_API_KEY` for AI features (optional)
+- **Static hosting**: `dist/` contains client assets for SPA deployment
 - **No database**: All data in localStorage / URL hash
-- **Node 18+** required for `fetch`, `AbortController`, modern globals
 
 ---
 
