@@ -2,7 +2,6 @@ import React from 'react';
 import { ProposalAgency, ProposalTheme, TablePageData } from '../types';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
-import { WatermarkOverlay } from './WatermarkOverlay';
 
 interface CategoryTablePageProps {
   pageTitle: string;
@@ -29,10 +28,6 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
-      {/* Background Watermark Overlay */}
-      <WatermarkOverlay theme={theme} agency={agency} />
-
-      {/* Main Page Content */}
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Top Header */}
         <PageHeader pageTitle={pageTitle} agency={agency} theme={theme} />
@@ -60,7 +55,9 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
         {/* Table Rows */}
         <div className="flex-1 flex flex-col justify-start space-y-4 sm:space-y-6">
           {rows.map((row) => {
-            const detailLines = row.details.split('\n');
+            const detailLines = Array.isArray(row.details)
+              ? row.details
+              : row.details.split('\n');
 
             return (
               <div
@@ -77,8 +74,9 @@ export const CategoryTablePage: React.FC<CategoryTablePageProps> = ({
                 {/* Details Description Column */}
                 <div className="col-span-12 sm:col-span-8 text-slate-700 text-xs sm:text-sm font-medium leading-relaxed space-y-1">
                   {detailLines.map((line, idx) => {
-                    const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
-                    const text = isBullet ? line.trim().replace(/^[•-]\s*/, '') : line;
+                    const trimmedLine = line.trim();
+                    const isBullet = trimmedLine.startsWith('•') || trimmedLine.startsWith('-');
+                    const text = isBullet ? trimmedLine.replace(/^[•-]\s*/, '') : trimmedLine;
 
                     return (
                       <div key={idx} className={isBullet ? 'flex items-start gap-2 pl-1' : ''}>

@@ -54,16 +54,15 @@ export const PageFooter: React.FC<PageFooterProps> = ({
         <div className="flex-1" />
       )}
 
-      {/* Right: Custom Footer Number */}
-      {footerNumber ? (
-        <div className="flex items-center justify-end flex-shrink-0">
-          <span className="text-[10px] font-semibold text-slate-700">
-            {footerNumber}
-          </span>
-        </div>
-      ) : (
-        <div className="w-20 flex-shrink-0" />
-      )}
+      {/* Right: Website + Footer Number */}
+      <div className="flex items-center justify-end flex-shrink-0">
+        <span className="text-[10px] font-medium text-slate-500">
+          www.socialdrishti.com
+        </span>
+        <span className="text-[10px] font-semibold text-slate-700 mx-2">
+          {footerNumber}
+        </span>
+      </div>
     </div>
   );
 };

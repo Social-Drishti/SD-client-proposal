@@ -32,10 +32,6 @@ export const socialDrishtiProposal: Proposal = {
     showLogoOnPages: true,
     showPageNumbers: true,
     customFooterText: "",
-    showWatermark: true,
-    watermarkType: "logo",
-    watermarkLogoUrl: "/SD-LOGO.png",
-    watermarkOpacity: 0.06,
   },
   pages: [
     {

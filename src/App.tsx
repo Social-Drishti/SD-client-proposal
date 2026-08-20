@@ -2,13 +2,12 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Proposal, PageType, ProposalPage } from './types';
 import { ProposalProvider, useProposalContext } from './context/ProposalContext';
 import { ViewProvider, useViewContext } from './context/ViewContext';
-import { ProposalPageCanvas } from './components/ProposalPageCanvas';
 import { ProposalEditor } from './components/ProposalEditor';
 import { SwipeablePages } from './components/SwipeablePages';
 import { Navbar } from './components/Navbar';
 import { ShareModal } from './components/ShareModal';
 import { PrintLayout } from './components/PrintLayout';
-import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Printer, Eye, Share2, Layout, LayoutPanelLeft, LayoutDashboard, Maximize2, Minimize2, Plus, Copy } from 'lucide-react';
+import { CheckCircle2, FileText, ChevronLeft, ChevronRight, Printer, Share2, Plus, Copy } from 'lucide-react';
 
 function AppContent() {
   const isPrintRoute = window.location.pathname.startsWith('/print/');
@@ -35,13 +34,11 @@ function AppContent() {
 
   const {
     zoomLevel,
-    splitView,
     previewModeOnly,
     sidebarOpen,
     isMobile,
     fabMenuOpen,
     setZoomLevel,
-    toggleSplitView,
     togglePreviewMode,
     setSidebarOpen,
     setFabMenuOpen,
@@ -407,11 +404,26 @@ function AppContent() {
     }, 500);
   }, [activeProposal, showToast]);
 
+  // Cover page date handler
+  const activePage = activeProposal.pages[state.activePageIndex];
+  const isCoverPage = activePage?.type === 'cover';
+
+  const handleUpdateCoverDate = useCallback((date: string) => {
+    if (!activePage || activePage.type !== 'cover') return;
+    const updatedPage = { ...activePage, data: { ...activePage.data, dateText: date } };
+    const updatedPages = [...activeProposal.pages];
+    updatedPages[state.activePageIndex] = updatedPage;
+    ctxUpdateProposal({
+      ...activeProposal,
+      pages: updatedPages,
+      updatedAt: new Date().toISOString()
+    });
+  }, [activePage, activeProposal, state.activePageIndex, ctxUpdateProposal]);
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] flex flex-col font-jakarta overflow-hidden">
       {/* Top Header Toolbar */}
       <Navbar
-        proposals={state.proposals}
         activeProposal={activeProposal}
         onSelectProposal={ctxSelectProposal}
         onCreateProposal={handleCreateProposal}
@@ -425,8 +437,7 @@ function AppContent() {
         onChangeZoom={setZoomLevel}
         previewModeOnly={previewModeOnly}
         onTogglePreviewMode={togglePreviewMode}
-        splitView={splitView}
-        onToggleSplitView={toggleSplitView}
+        activePageType={activePage?.type || ''}
       />
 
       {/* Share & Import Modal */}
@@ -448,7 +459,7 @@ function AppContent() {
         )}
 
         {/* Mobile Sidebar Overlay */}
-        {isMobile && sidebarOpen && !previewModeOnly && !splitView && (
+        {isMobile && sidebarOpen && !previewModeOnly && (
           <div
             className="no-print fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200 lg:hidden"
             onClick={() => setSidebarOpen(false)}
@@ -456,70 +467,9 @@ function AppContent() {
           />
         )}
 
-        {/* SPLIT VIEW MODE: Editor + Active Page Preview Side by Side */}
-        {splitView && !previewModeOnly && (
-          <div className="flex h-full w-full overflow-hidden">
-            {/* Left: Editor Panel */}
-            <div className="flex-1 min-w-0 h-full border-r border-slate-200 bg-white no-print">
-              <ProposalEditor
-                proposal={activeProposal}
-                activePageIndex={state.activePageIndex}
-                onSelectPage={ctxSetActivePageIndex}
-                onUpdateProposal={ctxUpdateProposal}
-                isMobile={isMobile}
-              />
-            </div>
-
-            {/* Right: Live Preview of Active Page Only */}
-            <div className="flex-1 min-w-0 h-full overflow-y-auto bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
-              <div
-                ref={pagesContainerRef}
-                className="print-area flex flex-col items-center w-full relative"
-                style={{ transform: `scale(${isMobile ? Math.min(zoomLevel, 0.6) : zoomLevel})`, transformOrigin: 'top center' }}
-              >
-                {activeProposal.pages.map((page, idx) => (
-                  <div
-                    key={page.id}
-                    id={`page-card-${idx}`}
-                    className="relative flex flex-col items-center w-full"
-                    style={idx !== state.activePageIndex
-                      ? { position: 'absolute', top: 0, left: 0, right: 0, opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }
-                      : undefined}
-                  >
-                    {idx === state.activePageIndex && (
-                      <div className="no-print mb-2 flex items-center justify-between w-full max-w-[210mm] px-1 text-slate-500 text-xs font-medium">
-                        <span className="flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-slate-700" />
-                          Page {idx + 1} of {activeProposal.pages.length} — {page.pageTitle}
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
-                          Live Editing
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="relative w-full max-w-[210mm]">
-                      <ProposalPageCanvas
-                        page={page}
-                        agency={activeProposal.agency}
-                        client={activeProposal.client}
-                        theme={activeProposal.theme}
-                        pageNumber={idx + 1}
-                        totalPages={activeProposal.pages.length}
-                        isSelected={idx === state.activePageIndex}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* NORMAL MODE: Sidebar Editor + Full Preview Stack */}
-        {!splitView && (
-          <>
-            {/* Left Sidebar: Proposal Editor Panel */}
+        <>
+          {/* Left Sidebar: Proposal Editor Panel */}
             {!previewModeOnly && (
               <>
                 {/* Mobile Sidebar Drawer */}
@@ -571,7 +521,7 @@ function AppContent() {
             {/* Right Canvas Area: Live A4 Paginated Preview - Swipe Navigation */}
             <div className="flex-1 h-full bg-[#F1F3F5] p-4 sm:p-8 flex flex-col items-center justify-start relative">
               {/* Mobile: Toggle Sidebar Button */}
-              {isMobile && !previewModeOnly && !splitView && (
+              {isMobile && !previewModeOnly && (
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -675,11 +625,11 @@ function AppContent() {
                   isMobile={isMobile}
                   zoomLevel={zoomLevel}
                   showPageBadges={!previewModeOnly}
+                  onUpdateCoverDate={handleUpdateCoverDate}
                 />
               </div>
             </div>
           </>
-        )}
 
         {/* PREVIEW ONLY MODE: Full width preview with swipe navigation */}
         {previewModeOnly && (
@@ -698,6 +648,7 @@ function AppContent() {
                 isMobile={isMobile}
                 zoomLevel={zoomLevel}
                 showPageBadges={false}
+                onUpdateCoverDate={handleUpdateCoverDate}
               />
             </div>
           </div>

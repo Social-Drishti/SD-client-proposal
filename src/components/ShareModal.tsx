@@ -247,7 +247,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-amber-800 text-[11px]">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
-                  Tip: Opening this link on another device loads the entire proposal instantly, complete with pages, pricing tables, and custom watermarks.
+                  Tip: Opening this link on another device loads the entire proposal instantly, complete with pages and pricing tables.
                 </span>
               </div>
             </div>

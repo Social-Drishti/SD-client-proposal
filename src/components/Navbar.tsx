@@ -17,12 +17,8 @@ import {
   Save,
   Menu,
   X,
-  Layout,
-  Columns,
-  Maximize2,
-  Minimize2,
   Clock,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -39,8 +35,7 @@ interface NavbarProps {
   onChangeZoom: (newZoom: number) => void;
   previewModeOnly: boolean;
   onTogglePreviewMode: () => void;
-  splitView: boolean;
-  onToggleSplitView: () => void;
+  activePageType: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -57,8 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onChangeZoom,
   previewModeOnly,
   onTogglePreviewMode,
-  splitView,
-  onToggleSplitView
+  activePageType
 }) => {
   const { state, clearSaveError } = useProposalContext();
   const proposals = state.proposals;
@@ -71,7 +65,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Format relative time for last saved indicator
   const getLastSavedText = () => {
     if (!lastSavedAt) return 'Not saved yet';
     const diff = Date.now() - lastSavedAt;
@@ -116,9 +109,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const isCoverPage = activePageType === 'cover';
+
   return (
     <header className="no-print bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between z-30 select-none shrink-0 md:h-16">
-      {/* Mobile (< 768px): Stacked layout with hamburger on top, share below */}
+      {/* Mobile (< 768px): Stacked layout with hamburger + share */}
       <div className="md:hidden w-full">
         <div className="flex items-center justify-between">
           <button
@@ -129,6 +124,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <img
+              src="/SD-LOGO.png"
+              alt="SD Logo"
+              className="w-8 h-8 object-contain"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -142,21 +144,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Tablet (768px - 1023px): Hamburger button only (secondary controls in mobile menu) */}
+      {/* Tablet & Desktop (>= 768px): Single hamburger button */}
       <button
         type="button"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="hidden md:block lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-        aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-      >
-        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
-      {/* Desktop (≥ 1024px): Hamburger button only */}
-      <button
-        type="button"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="hidden lg:block p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+        className="hidden md:block p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
       >
         {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -166,8 +158,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
         {/* Brand Icon */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 bg-black flex items-center justify-center rounded-lg shadow-xs flex-shrink-0">
-            <span className="text-white font-bold text-xs uppercase">P</span>
+          <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+            <img
+              src="/SD-LOGO.png"
+              alt="SD Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="hidden sm:block min-w-0">
             {editingTitleId === activeProposal.id ? (
@@ -208,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-800 transition-all max-w-[180px] sm:max-w-[260px] min-w-0"
           >
-            <span className="truncate">{activeProposal.title}</span>
+            <span className="truncate">All Proposals</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
           </button>
 
@@ -365,32 +361,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
-          onClick={onToggleSplitView}
-          className={`px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all ${
-            splitView
-              ? 'bg-black text-white'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-          }`}
-          title={splitView ? 'Exit Split View' : 'Enter Split View (Editor + Live Preview)'}
-        >
-          {splitView ? (
-            <>
-              <Minimize2 className="w-3.5 h-3.5" />
-              Exit Split
-            </>
-          ) : (
-            <>
-              <Layout className="w-3.5 h-3.5" />
-              <Columns className="w-3.5 h-3.5" />
-              Split View
-            </>
-          )}
-        </button>
-
-        <div className="h-4 w-[1px] bg-slate-200 mx-1" />
-
-        <button
-          type="button"
           onClick={onTogglePreviewMode}
           className={`px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all ${
             previewModeOnly
@@ -412,12 +382,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </div>
 
-      {/* Action Buttons: Save + Share + Print + Export PDF - Hidden on mobile/tablet, shown on desktop */}
+      {/* Action Buttons: Save + Share + Print - Hidden on mobile/tablet, shown on desktop */}
       <div className="hidden lg:flex items-center gap-2 lg:gap-3 flex-shrink-0">
         <button
           type="button"
           onClick={onSaveNow}
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition-colors"
           title="Click to save active proposal state"
         >
           <Save className="w-3.5 h-3.5 text-slate-600" />
@@ -427,7 +397,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onOpenShareModal}
-          className="hidden lg:flex lg:px-3 lg:py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg items-center gap-1.5 transition-all"
+          className="px-3 py-2 text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all"
           title="Share proposal via link, JSON, or import"
         >
           <Share2 className="w-3.5 h-3.5 text-emerald-700" />
@@ -437,7 +407,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onPrintNative}
-          className="hidden lg:flex lg:px-3 lg:py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 items-center gap-2 transition-all"
+          className="px-3 py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-800 flex items-center gap-2 transition-all"
           title="Print to PDF via Browser"
         >
           <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -473,31 +443,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Zoom In"
             >
               <ZoomIn className="w-5 h-5" />
-            </button>
-
-            <div className="h-5 w-[1px] bg-slate-200 mx-2 flex-shrink-0" />
-
-            <button
-              type="button"
-              onClick={onToggleSplitView}
-              className={`px-3 py-2 rounded text-sm font-medium flex items-center gap-2 transition-all flex-1 justify-center ${
-                splitView
-                  ? 'bg-black text-white'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-              }`}
-            >
-              {splitView ? (
-                <>
-                  <Minimize2 className="w-4 h-4" />
-                  Exit Split View
-                </>
-              ) : (
-                <>
-                  <Layout className="w-4 h-4" />
-                  <Columns className="w-4 h-4" />
-                  Split View
-                </>
-              )}
             </button>
           </div>
 
@@ -559,4 +504,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-

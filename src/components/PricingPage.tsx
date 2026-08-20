@@ -2,7 +2,6 @@ import React from 'react';
 import { ProposalAgency, ProposalTheme, PricingPageData } from '../types';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
-import { WatermarkOverlay } from './WatermarkOverlay';
 
 interface PricingPageProps {
   pageTitle: string;
@@ -30,7 +29,6 @@ export const PricingPage: React.FC<PricingPageProps> = ({
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between bg-white overflow-hidden p-6 sm:p-10 select-none">
-      <WatermarkOverlay theme={theme} agency={agency} />
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Top Header */}
         <PageHeader pageTitle={pageTitle} agency={agency} theme={theme} />

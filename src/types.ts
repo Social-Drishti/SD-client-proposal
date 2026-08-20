@@ -3,7 +3,10 @@ export type TemplateStyle =
   | 'navy-gold'
   | 'emerald-slate'
   | 'minimal-charcoal'
-  | 'creative-indigo';
+  | 'creative-indigo'
+  | 'smm-scope'
+  | 'smm-operations'
+  | 'video-production';
 
 export type PageType = 
   | 'cover'
@@ -18,7 +21,7 @@ export type PageType =
 export interface CategoryTableRow {
   id: string;
   category: string;
-  details: string;
+  details: string | string[];
 }
 
 export interface TablePageData {
@@ -152,11 +155,6 @@ export interface ProposalTheme {
   customFooterLeftText?: string;
   customFooterText?: string;
   showPageNumbers: boolean;
-  showWatermark?: boolean;
-  watermarkType?: 'logo' | 'text';
-  watermarkText?: string;
-  watermarkLogoUrl?: string;
-  watermarkOpacity?: number;
 }
 
 export interface Proposal {

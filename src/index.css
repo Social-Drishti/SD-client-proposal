@@ -227,10 +227,6 @@
     display: block !important;
   }
 
-  .watermark-overlay {
-    opacity: 0.05 !important;
-  }
-
   /* --- Page setup --- */
   @page {
     size: A4 portrait;

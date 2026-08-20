@@ -13,6 +13,7 @@ interface SwipeablePagesProps {
   isMobile?: boolean;
   zoomLevel?: number;
   showPageBadges?: boolean;
+  onUpdateCoverDate?: (date: string) => void;
 }
 
 export const SwipeablePages: React.FC<SwipeablePagesProps> = ({
@@ -25,6 +26,7 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({
   isMobile = false,
   zoomLevel = 1,
   showPageBadges = true,
+  onUpdateCoverDate
 }) => {
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -188,6 +190,7 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({
                 totalPages={pages.length}
                 isSelected={idx === activePageIndex}
                 onClick={() => onPageChange(idx)}
+                onUpdateCoverDate={page.type === 'cover' ? onUpdateCoverDate : undefined}
               />
             </div>
           </div>

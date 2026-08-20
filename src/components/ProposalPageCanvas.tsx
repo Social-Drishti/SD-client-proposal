@@ -11,6 +11,7 @@ interface ProposalPageCanvasProps {
   totalPages: number;
   isSelected?: boolean;
   onClick?: () => void;
+  onUpdateCoverDate?: (date: string) => void;
 }
 
 export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
@@ -21,7 +22,8 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
   pageNumber,
   totalPages,
   isSelected,
-  onClick
+  onClick,
+  onUpdateCoverDate
 }) => {
   const getFontClass = () => {
     switch (theme.fontFamily) {
@@ -52,6 +54,7 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
             pageNumber={pageNumber}
             totalPages={totalPages}
             footerNumber={page.footerNumber}
+            onUpdateDate={onUpdateCoverDate}
           />
         );
       }

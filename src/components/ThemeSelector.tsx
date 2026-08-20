@@ -24,6 +24,30 @@ const TEMPLATE_PRESETS: Array<{
     font: 'Plus Jakarta Sans'
   },
   {
+    id: 'smm-scope',
+    name: 'Social Media Management - Scope',
+    description: 'Teal and orange theme for social media management proposals',
+    primary: '#00838f',
+    accent: '#f59e0b',
+    font: 'Plus Jakarta Sans'
+  },
+  {
+    id: 'smm-operations',
+    name: 'Social Media Management - Operations',
+    description: 'Teal and orange theme for social media operations proposals',
+    primary: '#00838f',
+    accent: '#f59e0b',
+    font: 'Plus Jakarta Sans'
+  },
+  {
+    id: 'video-production',
+    name: 'Video Production',
+    description: 'Teal and orange theme for video production proposals',
+    primary: '#00838f',
+    accent: '#f59e0b',
+    font: 'Plus Jakarta Sans'
+  },
+  {
     id: 'navy-gold',
     name: 'Corporate Navy & Gold',
     description: 'Executive navy headers with rich amber gold highlights',
@@ -65,7 +89,7 @@ const FONTS: Array<ProposalTheme['fontFamily']> = [
 ];
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ theme, onChange }) => {
-  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'headerLogoUrl' | 'footerLogoUrl' | 'watermarkLogoUrl') => {
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'headerLogoUrl' | 'footerLogoUrl') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -396,132 +420,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ theme, onChange })
         </h4>
 
         <div className="space-y-3 bg-slate-50/50 p-3 rounded-xl border border-slate-200">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!!theme.showWatermark}
-              onChange={(e) => onChange({ ...theme, showWatermark: e.target.checked })}
-              className="rounded border-slate-300 text-black focus:ring-black"
-            />
-            <span className="text-xs font-bold text-slate-800">Enable Page Background Watermark</span>
-          </label>
-
-          {theme.showWatermark && (
-            <div className="space-y-3 pt-2 border-t border-slate-200/60">
-              {/* Watermark Type Selector */}
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1.5">
-                  Watermark Type
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onChange({ ...theme, watermarkType: 'logo' })}
-                    className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${
-                      (theme.watermarkType || 'logo') === 'logo'
-                        ? 'border-black bg-slate-900 text-white'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    Logo Watermark
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onChange({ ...theme, watermarkType: 'text' })}
-                    className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${
-                      theme.watermarkType === 'text'
-                        ? 'border-black bg-slate-900 text-white'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    Text Watermark
-                  </button>
-                </div>
-              </div>
-
-              {/* Logo Watermark Options */}
-              {(theme.watermarkType || 'logo') === 'logo' ? (
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                    Watermark Logo Image
-                  </label>
-                  <p className="text-[10px] text-slate-500 mb-1.5">
-                    Upload a custom logo image or leave empty to automatically use the Header/Brand logo.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Upload Watermark Image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleLogoFileUpload(e, 'watermarkLogoUrl')}
-                        className="hidden"
-                      />
-                    </label>
-                    {theme.watermarkLogoUrl && (
-                      <button
-                        type="button"
-                        onClick={() => onChange({ ...theme, watermarkLogoUrl: '' })}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove Custom Watermark Logo"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  {theme.watermarkLogoUrl && (
-                    <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
-                      <img src={theme.watermarkLogoUrl} alt="Watermark Preview" className="h-6 max-w-[120px] object-contain opacity-50" />
-                      <span className="text-[10px] text-slate-400">Custom watermark logo active</span>
-                    </div>
-                  )}
-                  <input
-                    type="text"
-                    value={theme.watermarkLogoUrl || ''}
-                    onChange={(e) => onChange({ ...theme, watermarkLogoUrl: e.target.value })}
-                    placeholder="Or paste watermark image URL (https://...)"
-                    className="w-full mt-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] text-slate-700 focus:border-black focus:outline-none"
-                  />
-                </div>
-              ) : (
-                /* Text Watermark Options */
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                    Watermark Text
-                  </label>
-                  <input
-                    type="text"
-                    value={theme.watermarkText ?? ''}
-                    onChange={(e) => onChange({ ...theme, watermarkText: e.target.value })}
-                    placeholder="e.g. CONFIDENTIAL or DRAFT or Agency Name"
-                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:border-black focus:outline-none"
-                  />
-                </div>
-              )}
-
-              {/* Opacity Slider */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-slate-600">
-                    Watermark Opacity
-                  </label>
-                  <span className="text-[11px] font-mono font-bold text-slate-700">
-                    {Math.round((theme.watermarkOpacity ?? 0.06) * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.02"
-                  max="0.25"
-                  step="0.01"
-                  value={theme.watermarkOpacity ?? 0.06}
-                  onChange={(e) => onChange({ ...theme, watermarkOpacity: parseFloat(e.target.value) })}
-                  className="w-full accent-black cursor-pointer"
-                />
-              </div>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

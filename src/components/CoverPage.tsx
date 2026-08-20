@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ProposalAgency,
   ProposalClient,
@@ -15,6 +15,7 @@ interface CoverPageProps {
   pageNumber?: number;
   totalPages?: number;
   footerNumber?: string;
+  onUpdateDate?: (date: string) => void;
 }
 
 export const CoverPage: React.FC<CoverPageProps> = ({
@@ -25,6 +26,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   pageNumber,
   totalPages,
   footerNumber,
+  onUpdateDate,
 }) => {
   const mainTitle = data.mainTitle || "Client Proposal";
   const clientName = data.clientName || client.name;
@@ -34,7 +36,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
   return (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-white select-none p-8 sm:p-12">
-      {/* Top Section: Centered Big Header Logo + Date Tag */}
+      {/* Top Section: Centered Big Header Logo + Date Display */}
       <div className="relative z-10 flex items-center justify-between pb-4 border-b border-slate-100 min-h-[60px]">
         <div className="w-24" /> {/* Spacer to balance layout */}
         {/* Centered Big Logo */}
@@ -55,9 +57,8 @@ export const CoverPage: React.FC<CoverPageProps> = ({
             </span>
           )}
         </div>
-        {/* Date Tag */}
         <div className="w-24 text-right">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <span className="text-xs font-medium text-slate-600">
             {dateText}
           </span>
         </div>

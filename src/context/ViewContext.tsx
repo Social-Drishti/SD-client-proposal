@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 
 interface ViewState {
   zoomLevel: number;
-  splitView: boolean;
   previewModeOnly: boolean;
   sidebarOpen: boolean;
   isMobile: boolean;
@@ -11,7 +10,6 @@ interface ViewState {
 
 interface ViewContextValue extends ViewState {
   setZoomLevel: (level: number) => void;
-  toggleSplitView: () => void;
   togglePreviewMode: () => void;
   setSidebarOpen: (open: boolean) => void;
   setFabMenuOpen: (open: boolean) => void;
@@ -21,7 +19,6 @@ const ViewContext = createContext<ViewContextValue | null>(null);
 
 export function ViewProvider({ children }: { children: ReactNode }) {
   const [zoomLevel, setZoomLevelState] = useState<number>(0.85);
-  const [splitView, setSplitView] = useState<boolean>(false);
   const [previewModeOnly, setPreviewModeOnly] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpenState] = useState<boolean>(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -45,10 +42,6 @@ export function ViewProvider({ children }: { children: ReactNode }) {
     setZoomLevelState(Math.max(0.4, Math.min(1.3, level)));
   }, []);
 
-  const toggleSplitView = useCallback(() => {
-    setSplitView((prev) => !prev);
-  }, []);
-
   const togglePreviewMode = useCallback(() => {
     setPreviewModeOnly((prev) => !prev);
   }, []);
@@ -60,13 +53,11 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   return (
     <ViewContext.Provider value={{
       zoomLevel,
-      splitView,
       previewModeOnly,
       sidebarOpen,
       isMobile,
       fabMenuOpen,
       setZoomLevel,
-      toggleSplitView,
       togglePreviewMode,
       setSidebarOpen,
       setFabMenuOpen,
