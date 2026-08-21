@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { Proposal, PageType, ProposalPage, FIXED_CATEGORIES } from './types';
+import { Proposal, PageType, ProposalPage, FIXED_CATEGORIES, SERVICE_SCOPE_CATEGORIES, VIDEO_PRODUCTION_CATEGORIES } from './types';
 import { ProposalProvider, useProposalContext } from './context/ProposalContext';
 import { ViewProvider, useViewContext } from './context/ViewContext';
 import { ProposalEditor } from './components/ProposalEditor';
@@ -251,6 +251,22 @@ function AppContent() {
         return {
           rows: FIXED_CATEGORIES.map((category, i) => ({
             id: `fcr-${i}`,
+            category,
+            details: '',
+          })),
+        };
+      case 'service-scope-table':
+        return {
+          rows: SERVICE_SCOPE_CATEGORIES.map((category, i) => ({
+            id: `ssr-${i}`,
+            category,
+            details: '',
+          })),
+        };
+      case 'video-production-table':
+        return {
+          rows: VIDEO_PRODUCTION_CATEGORIES.map((category, i) => ({
+            id: `vpr-${i}`,
             category,
             details: '',
           })),

@@ -90,6 +90,38 @@ export const ProposalPageCanvas: React.FC<ProposalPageCanvasProps> = ({
           />
         );
       }
+      case 'service-scope-table': {
+        const entry = PAGE_REGISTRY['service-scope-table'];
+        const Component = entry.component;
+        return (
+          <Component
+            pageTitle={page.pageTitle}
+            agency={agency}
+            client={client}
+            theme={theme}
+            data={page.data}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            footerNumber={page.footerNumber}
+          />
+        );
+      }
+      case 'video-production-table': {
+        const entry = PAGE_REGISTRY['video-production-table'];
+        const Component = entry.component;
+        return (
+          <Component
+            pageTitle={page.pageTitle}
+            agency={agency}
+            client={client}
+            theme={theme}
+            data={page.data}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            footerNumber={page.footerNumber}
+          />
+        );
+      }
       case 'pricing-highlight': {
         const entry = PAGE_REGISTRY['pricing-highlight'];
         const Component = entry.component;

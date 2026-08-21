@@ -1,15 +1,17 @@
 import React from 'react';
-import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, FixedCategoryTableData, FIXED_CATEGORIES, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData, CombinedTablePricingData } from '../types';
+import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, FixedCategoryTableData, FIXED_CATEGORIES, SERVICE_SCOPE_CATEGORIES, ServiceScopeTableData, VIDEO_PRODUCTION_CATEGORIES, VideoProductionTableData, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData, CombinedTablePricingData } from '../types';
 import { CoverPage } from '../components/CoverPage';
 import { CategoryTablePage } from '../components/CategoryTablePage';
 import { FixedCategoryTablePage } from '../components/FixedCategoryTablePage';
+import { ServiceScopeTablePage } from '../components/ServiceScopeTablePage';
+import { VideoProductionTablePage } from '../components/VideoProductionTablePage';
 import { PricingPage } from '../components/PricingPage';
 import { DeliverablesPage } from '../components/DeliverablesPage';
 import { MilestonesPage } from '../components/MilestonesPage';
 import { TermsPage } from '../components/TermsPage';
 import { FreeformPage } from '../components/FreeformPage';
 import { CombinedTablePricingPage } from '../components/CombinedTablePricingPage';
-import { FileText, Table, ListChecks, DollarSign, Briefcase, ListTodo, FilePen, FileType, LayoutGrid } from 'lucide-react';
+import { FileText, Table, ListChecks, CalendarRange, DollarSign, Briefcase, ListTodo, FilePen, FileType, LayoutGrid, Video } from 'lucide-react';
 
 export interface PageRegistryEntry {
   component: React.ComponentType<{ pageTitle: string; agency: any; theme: any; data: any; pageNumber?: number; totalPages?: number; client?: any }>;
@@ -51,6 +53,30 @@ export const PAGE_REGISTRY: Record<PageType, PageRegistryEntry> = {
     defaultData: (): FixedCategoryTableData => ({
       rows: FIXED_CATEGORIES.map((category, i) => ({
         id: `fcr-${Date.now()}-${i}`,
+        category,
+        details: '',
+      })),
+    }),
+  },
+  'service-scope-table': {
+    component: ServiceScopeTablePage,
+    label: 'Service Scope Table',
+    icon: CalendarRange,
+    defaultData: (): ServiceScopeTableData => ({
+      rows: SERVICE_SCOPE_CATEGORIES.map((category, i) => ({
+        id: `ssr-${Date.now()}-${i}`,
+        category,
+        details: '',
+      })),
+    }),
+  },
+  'video-production-table': {
+    component: VideoProductionTablePage,
+    label: 'Video Production Table',
+    icon: Video,
+    defaultData: (): VideoProductionTableData => ({
+      rows: VIDEO_PRODUCTION_CATEGORIES.map((category, i) => ({
+        id: `vpr-${Date.now()}-${i}`,
         category,
         details: '',
       })),

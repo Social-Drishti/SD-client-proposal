@@ -9,6 +9,8 @@ export type PageType =
   | 'cover'
   | 'category-table'
   | 'fixed-category-table'
+  | 'service-scope-table'
+  | 'video-production-table'
   | 'pricing-highlight'
   | 'deliverables-grid'
   | 'milestones'
@@ -46,6 +48,48 @@ export interface FixedCategoryTableRow {
 
 export interface FixedCategoryTableData {
   rows: FixedCategoryTableRow[];
+}
+
+export const SERVICE_SCOPE_CATEGORIES = [
+  'Scheduling & Publishing',
+  'Engagement',
+  'Monitoring',
+  'Reporting',
+  'Complimentary',
+] as const;
+
+export type ServiceScopeCategory = (typeof SERVICE_SCOPE_CATEGORIES)[number];
+
+export interface ServiceScopeTableRow {
+  id: string;
+  category: ServiceScopeCategory;
+  details: string | string[];
+}
+
+export interface ServiceScopeTableData {
+  rows: ServiceScopeTableRow[];
+}
+
+export const VIDEO_PRODUCTION_CATEGORIES = [
+  'Video shoot',
+  'Duration of videos',
+  'Editing',
+  'Strategy',
+  'Video Concept',
+  'Shot list & prop checklist',
+  'Video Reference',
+] as const;
+
+export type VideoProductionCategory = (typeof VIDEO_PRODUCTION_CATEGORIES)[number];
+
+export interface VideoProductionTableRow {
+  id: string;
+  category: VideoProductionCategory;
+  details: string | string[];
+}
+
+export interface VideoProductionTableData {
+  rows: VideoProductionTableRow[];
 }
 
 export interface PricingNote {
@@ -120,6 +164,8 @@ export type ProposalPageData =
   | CoverPageData
   | TablePageData
   | FixedCategoryTableData
+  | ServiceScopeTableData
+  | VideoProductionTableData
   | PricingPageData
   | DeliverablesPageData
   | MilestonesPageData
@@ -130,6 +176,8 @@ export type ProposalPage =
   | { id: string; pageTitle: string; type: 'cover'; data: CoverPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'category-table'; data: TablePageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'fixed-category-table'; data: FixedCategoryTableData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'service-scope-table'; data: ServiceScopeTableData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'video-production-table'; data: VideoProductionTableData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'pricing-highlight'; data: PricingPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string; footerNumber?: string }
@@ -246,6 +294,32 @@ export function migrateProposalPage(oldPage: LegacyProposalPage): ProposalPage {
         data: {
           rows: FIXED_CATEGORIES.map((category, i) => ({
             id: `fcr-${i}`,
+            category,
+            details: '',
+          })),
+        },
+      };
+    }
+    case 'service-scope-table': {
+      const page = base as { id: string; pageTitle: string; type: 'service-scope-table'; accentBarColor?: string };
+      return {
+        ...page,
+        data: {
+          rows: SERVICE_SCOPE_CATEGORIES.map((category, i) => ({
+            id: `ssr-${i}`,
+            category,
+            details: '',
+          })),
+        },
+      };
+    }
+    case 'video-production-table': {
+      const page = base as { id: string; pageTitle: string; type: 'video-production-table'; accentBarColor?: string };
+      return {
+        ...page,
+        data: {
+          rows: VIDEO_PRODUCTION_CATEGORIES.map((category, i) => ({
+            id: `vpr-${i}`,
             category,
             details: '',
           })),

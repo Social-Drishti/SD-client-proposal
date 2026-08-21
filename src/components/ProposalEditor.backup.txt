@@ -87,7 +87,7 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
         pageTitle: 'Investment & Terms',
         type: 'pricing-highlight',
         data: {
-          highlightBoxTitle: 'Monthly â€“ â‚¹4,999 + 18% GST',
+          highlightBoxTitle: 'Monthly ₹ + TAX',
           highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
           notesHeader: 'Note',
           notes: [
@@ -110,7 +110,7 @@ data: {
             ]
           },
           pricing: {
-            highlightBoxTitle: 'Monthly â€“ â‚¹4,999 + 18% GST',
+            highlightBoxTitle: 'Monthly ₹4,999 + Task',
             highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
             notesHeader: 'Note',
             notes: [
