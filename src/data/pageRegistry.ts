@@ -1,14 +1,15 @@
 import React from 'react';
-import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData, CombinedTablePricingData } from '../types';
+import { Proposal, ProposalPage, PageType, CoverPageData, TablePageData, FixedCategoryTableData, FIXED_CATEGORIES, PricingPageData, DeliverablesPageData, MilestonesPageData, TermsPageData, FreeformPageData, CombinedTablePricingData } from '../types';
 import { CoverPage } from '../components/CoverPage';
 import { CategoryTablePage } from '../components/CategoryTablePage';
+import { FixedCategoryTablePage } from '../components/FixedCategoryTablePage';
 import { PricingPage } from '../components/PricingPage';
 import { DeliverablesPage } from '../components/DeliverablesPage';
 import { MilestonesPage } from '../components/MilestonesPage';
 import { TermsPage } from '../components/TermsPage';
 import { FreeformPage } from '../components/FreeformPage';
 import { CombinedTablePricingPage } from '../components/CombinedTablePricingPage';
-import { FileText, Table, DollarSign, Briefcase, ListTodo, FilePen, FileType, LayoutGrid } from 'lucide-react';
+import { FileText, Table, ListChecks, DollarSign, Briefcase, ListTodo, FilePen, FileType, LayoutGrid } from 'lucide-react';
 
 export interface PageRegistryEntry {
   component: React.ComponentType<{ pageTitle: string; agency: any; theme: any; data: any; pageNumber?: number; totalPages?: number; client?: any }>;
@@ -41,6 +42,18 @@ export const PAGE_REGISTRY: Record<PageType, PageRegistryEntry> = {
         { id: `r-${Date.now()}-1`, category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
         { id: `r-${Date.now()}-2`, category: 'Strategy', details: 'Comprehensive approach and monitoring' },
       ],
+    }),
+  },
+  'fixed-category-table': {
+    component: FixedCategoryTablePage,
+    label: 'Fixed Category Table',
+    icon: ListChecks,
+    defaultData: (): FixedCategoryTableData => ({
+      rows: FIXED_CATEGORIES.map((category, i) => ({
+        id: `fcr-${Date.now()}-${i}`,
+        category,
+        details: '',
+      })),
     }),
   },
   'pricing-highlight': {

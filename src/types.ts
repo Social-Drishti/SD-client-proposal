@@ -8,6 +8,7 @@ export type TemplateStyle =
 export type PageType = 
   | 'cover'
   | 'category-table'
+  | 'fixed-category-table'
   | 'pricing-highlight'
   | 'deliverables-grid'
   | 'milestones'
@@ -25,6 +26,26 @@ export interface TablePageData {
   categoryTitle: string;
   detailsTitle: string;
   rows: CategoryTableRow[];
+}
+
+export const FIXED_CATEGORIES = [
+  'Platforms',
+  'Posts',
+  'Strategy',
+  'Optimization',
+  'Designing',
+] as const;
+
+export type FixedCategory = (typeof FIXED_CATEGORIES)[number];
+
+export interface FixedCategoryTableRow {
+  id: string;
+  category: FixedCategory;
+  details: string | string[];
+}
+
+export interface FixedCategoryTableData {
+  rows: FixedCategoryTableRow[];
 }
 
 export interface PricingNote {
@@ -98,6 +119,7 @@ export interface FreeformPageData {
 export type ProposalPageData =
   | CoverPageData
   | TablePageData
+  | FixedCategoryTableData
   | PricingPageData
   | DeliverablesPageData
   | MilestonesPageData
@@ -107,6 +129,7 @@ export type ProposalPageData =
 export type ProposalPage =
   | { id: string; pageTitle: string; type: 'cover'; data: CoverPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'category-table'; data: TablePageData; accentBarColor?: string; footerNumber?: string }
+  | { id: string; pageTitle: string; type: 'fixed-category-table'; data: FixedCategoryTableData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'pricing-highlight'; data: PricingPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'deliverables-grid'; data: DeliverablesPageData; accentBarColor?: string; footerNumber?: string }
   | { id: string; pageTitle: string; type: 'milestones'; data: MilestonesPageData; accentBarColor?: string; footerNumber?: string }
@@ -213,6 +236,19 @@ export function migrateProposalPage(oldPage: LegacyProposalPage): ProposalPage {
           categoryTitle: 'CATEGORY',
           detailsTitle: 'DETAILS',
           rows: [],
+        },
+      };
+    }
+    case 'fixed-category-table': {
+      const page = base as { id: string; pageTitle: string; type: 'fixed-category-table'; accentBarColor?: string };
+      return {
+        ...page,
+        data: {
+          rows: FIXED_CATEGORIES.map((category, i) => ({
+            id: `fcr-${i}`,
+            category,
+            details: '',
+          })),
         },
       };
     }

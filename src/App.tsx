@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { Proposal, PageType, ProposalPage } from './types';
+import { Proposal, PageType, ProposalPage, FIXED_CATEGORIES } from './types';
 import { ProposalProvider, useProposalContext } from './context/ProposalContext';
 import { ViewProvider, useViewContext } from './context/ViewContext';
 import { ProposalEditor } from './components/ProposalEditor';
@@ -247,6 +247,14 @@ function AppContent() {
             { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
           ]
         };
+      case 'fixed-category-table':
+        return {
+          rows: FIXED_CATEGORIES.map((category, i) => ({
+            id: `fcr-${i}`,
+            category,
+            details: '',
+          })),
+        };
       case 'pricing-highlight':
         return {
           highlightBoxTitle: 'Monthly – $5,000 + Taxes',
@@ -297,141 +305,6 @@ function AppContent() {
         return {
           heading: 'Executive Summary',
           content: 'Add your custom proposal narrative here.'
-        };
-      case 'smm-scope':
-        return {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: 'r1',
-              category: 'Platforms',
-              details: 'Instagram, Facebook, Linkedin, Youtube',
-            },
-            {
-              id: 'r2',
-              category: 'Posts',
-              details: [
-                '25 posts per month (Instagram, Facebook)',
-                '10 posts per month (Linkedin)',
-                '15 Story per month',
-                '18 Reels, Remaining Static/Carousel',
-                'Grid planning',
-                'Aesthetic looks, Moodboard',
-              ],
-            },
-            {
-              id: 'r3',
-              category: 'Strategy',
-              details: [
-                'Hashtag research and social media strategy',
-                'Content and brand positioning planning',
-                'Monthly social media strategy',
-                'Posting and scheduling',
-                'ORM (Online Reputation Management)',
-              ],
-            },
-            {
-              id: 'r4',
-              category: 'Optimization',
-              details: 'Page optimization & periodic suggestions based on research',
-            },
-            {
-              id: 'r5',
-              category: 'Content',
-              details: [
-                'Monthly content calendar planning',
-                'Copywriting and caption writing',
-              ],
-            },
-            {
-              id: 'r6',
-              category: 'Designing',
-              details: 'Making visual creatives based on brand tonality (2 revisions per post on static creatives)',
-            },
-          ],
-        };
-      case 'smm-operations':
-        return {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: 'r7',
-              category: 'Scheduling & Publishing',
-              details: 'Optimal time posting on decided platforms',
-            },
-            {
-              id: 'r8',
-              category: 'Engagement',
-              details: 'Image/location tagging',
-            },
-            {
-              id: 'r9',
-              category: 'Monitoring',
-              details: 'Community management (comment and DM monitoring)',
-            },
-            {
-              id: 'r10',
-              category: 'Reporting',
-              details: 'Monthly performance report and insights',
-            },
-            {
-              id: 'r11',
-              category: 'Complimentary',
-              details: 'Festive stories',
-            },
-          ],
-        };
-      case 'video-production':
-        return {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: 'v1',
-              category: 'Video shoot',
-              details: [
-                '3 video shoot monthly',
-                '2 Podcasts / 1 on-site shoot',
-                'Professional camera setup',
-                'Lighting setup',
-                'Videographer | Photographer + 1 assistant',
-                'Complete shoot coordination',
-                'Topic suggestions will be provided by our team',
-              ],
-            },
-            {
-              id: 'v2',
-              category: 'Duration of videos',
-              details: '30 secs – 90 secs',
-            },
-            {
-              id: 'v3',
-              category: 'Editing',
-              details: 'Editing, colour grade, text overlays and background music',
-            },
-            {
-              id: 'v4',
-              category: 'Strategy',
-              details: 'Shoot planning & shot list preparation before each session',
-            },
-            {
-              id: 'v5',
-              category: 'Video Concept',
-              details: 'The video concept will be planned by our team.',
-            },
-            {
-              id: 'v6',
-              category: 'Shot list & prop checklist',
-              details: 'Prop requirement checklist will be shared in advance, client need to arrange',
-            },
-            {
-              id: 'v7',
-              category: 'Video Reference',
-              details: 'Reference Videos per concept will be shared by us for client alignment before shoot',
-            },
-          ],
         };
       case 'milestones':
         return {
