@@ -224,18 +224,266 @@ function AppContent() {
     showToast('Created new proposal draft.');
   }, [activeProposal, ctxCreateProposal, showToast]);
 
-  // Duplicate current proposal
+  // Helper to get default page data for a given page type
+  const getDefaultPageData = useCallback((type: PageType, proposal: Proposal) => {
+    const now = new Date();
+    const dateText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    switch (type) {
+      case 'cover':
+        return {
+          mainTitle: 'Client Proposal Title',
+          subtitle: 'Prepared Exclusively For',
+          clientName: 'New Client',
+          clientRole: 'Marketing Director',
+          dateText,
+        };
+      case 'category-table':
+        return {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
+            { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
+          ]
+        };
+      case 'pricing-highlight':
+        return {
+          highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+          highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+          notesHeader: 'Note',
+          notes: [
+            { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+          ]
+        };
+      case 'combined-table-pricing':
+        return {
+          table: {
+            categoryTitle: 'CATEGORY',
+            detailsTitle: 'DETAILS',
+            rows: [
+              { id: 'r1', category: 'New Category', details: '• Item description\n• Details line 2' },
+              { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
+            ]
+          },
+          pricing: {
+            highlightBoxTitle: 'Monthly – $5,000 + Taxes',
+            highlightBoxSubtitle: '(Minimum Lock-in Period 6 Months)',
+            notesHeader: 'Note',
+            notes: [
+              { id: 'n1', title: 'Payment Terms', description: 'Invoices issued monthly in advance.' }
+            ]
+          }
+        };
+      case 'deliverables-grid':
+        return {
+          sectionTitle: 'Core Features',
+          items: [
+            { id: 'd1', title: 'Feature 1', description: 'Feature details and deliverables.', badge: 'Included' },
+            { id: 'd2', title: 'Feature 2', description: 'Feature details and deliverables.', badge: 'Premium' }
+          ]
+        };
+      case 'terms-signature':
+        return {
+          legalTerms: 'This proposal represents the entire agreement between parties.',
+          paymentTerms: 'Payment due 15 days from invoice date.',
+          validUntil: '30 Days',
+          agencySignatoryName: proposal.agency.name,
+          agencySignatoryTitle: 'Authorized Representative',
+          clientSignatoryName: 'New Client',
+          clientSignatoryTitle: 'Marketing Director'
+        };
+      case 'freeform':
+        return {
+          heading: 'Executive Summary',
+          content: 'Add your custom proposal narrative here.'
+        };
+      case 'smm-scope':
+        return {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            {
+              id: 'r1',
+              category: 'Platforms',
+              details: 'Instagram, Facebook, Linkedin, Youtube',
+            },
+            {
+              id: 'r2',
+              category: 'Posts',
+              details: [
+                '25 posts per month (Instagram, Facebook)',
+                '10 posts per month (Linkedin)',
+                '15 Story per month',
+                '18 Reels, Remaining Static/Carousel',
+                'Grid planning',
+                'Aesthetic looks, Moodboard',
+              ],
+            },
+            {
+              id: 'r3',
+              category: 'Strategy',
+              details: [
+                'Hashtag research and social media strategy',
+                'Content and brand positioning planning',
+                'Monthly social media strategy',
+                'Posting and scheduling',
+                'ORM (Online Reputation Management)',
+              ],
+            },
+            {
+              id: 'r4',
+              category: 'Optimization',
+              details: 'Page optimization & periodic suggestions based on research',
+            },
+            {
+              id: 'r5',
+              category: 'Content',
+              details: [
+                'Monthly content calendar planning',
+                'Copywriting and caption writing',
+              ],
+            },
+            {
+              id: 'r6',
+              category: 'Designing',
+              details: 'Making visual creatives based on brand tonality (2 revisions per post on static creatives)',
+            },
+          ],
+        };
+      case 'smm-operations':
+        return {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            {
+              id: 'r7',
+              category: 'Scheduling & Publishing',
+              details: 'Optimal time posting on decided platforms',
+            },
+            {
+              id: 'r8',
+              category: 'Engagement',
+              details: 'Image/location tagging',
+            },
+            {
+              id: 'r9',
+              category: 'Monitoring',
+              details: 'Community management (comment and DM monitoring)',
+            },
+            {
+              id: 'r10',
+              category: 'Reporting',
+              details: 'Monthly performance report and insights',
+            },
+            {
+              id: 'r11',
+              category: 'Complimentary',
+              details: 'Festive stories',
+            },
+          ],
+        };
+      case 'video-production':
+        return {
+          categoryTitle: 'CATEGORY',
+          detailsTitle: 'DETAILS',
+          rows: [
+            {
+              id: 'v1',
+              category: 'Video shoot',
+              details: [
+                '3 video shoot monthly',
+                '2 Podcasts / 1 on-site shoot',
+                'Professional camera setup',
+                'Lighting setup',
+                'Videographer | Photographer + 1 assistant',
+                'Complete shoot coordination',
+                'Topic suggestions will be provided by our team',
+              ],
+            },
+            {
+              id: 'v2',
+              category: 'Duration of videos',
+              details: '30 secs – 90 secs',
+            },
+            {
+              id: 'v3',
+              category: 'Editing',
+              details: 'Editing, colour grade, text overlays and background music',
+            },
+            {
+              id: 'v4',
+              category: 'Strategy',
+              details: 'Shoot planning & shot list preparation before each session',
+            },
+            {
+              id: 'v5',
+              category: 'Video Concept',
+              details: 'The video concept will be planned by our team.',
+            },
+            {
+              id: 'v6',
+              category: 'Shot list & prop checklist',
+              details: 'Prop requirement checklist will be shared in advance, client need to arrange',
+            },
+            {
+              id: 'v7',
+              category: 'Video Reference',
+              details: 'Reference Videos per concept will be shared by us for client alignment before shoot',
+            },
+          ],
+        };
+      case 'milestones':
+        return {
+          sectionTitle: 'Project Milestones',
+          steps: [
+            { id: 'm1', phase: 'Phase 1', title: 'Discovery & Planning', duration: 'Week 1-2', deliverables: 'Project brief, timeline, resource allocation' },
+            { id: 'm2', phase: 'Phase 2', title: 'Design & Development', duration: 'Week 3-6', deliverables: 'Wireframes, prototypes, core features' },
+            { id: 'm3', phase: 'Phase 3', title: 'Testing & Launch', duration: 'Week 7-8', deliverables: 'QA testing, bug fixes, deployment' },
+          ]
+        };
+      default:
+        return {
+          heading: 'Executive Summary',
+          content: 'Add your custom proposal narrative here.'
+        };
+    }
+  }, []);
+
+  // Duplicate current proposal - Full Template Mode
   const handleDuplicateProposal = useCallback(() => {
+    const now = new Date().toISOString();
+    
+    // Transform pages: keep structure (pageTitle, type, accentBarColor, footerNumber) but reset data/content
+    const duplicatedPages = activeProposal.pages.map((page, index) => ({
+      id: `page-${Date.now()}-${index}`,
+      pageTitle: page.pageTitle,
+      type: page.type,
+      data: getDefaultPageData(page.type, activeProposal),
+      accentBarColor: page.accentBarColor,
+      footerNumber: page.footerNumber,
+    }));
+
     const duplicated: Proposal = {
-      ...JSON.parse(JSON.stringify(activeProposal)),
-      id: `prop-dup-${Date.now()}`,
-      title: `${activeProposal.title} (Copy)`,
-      updatedAt: new Date().toISOString()
+      id: `prop-${Date.now()}`,
+      title: 'New Client Proposal',
+      createdAt: now,
+      updatedAt: now,
+      agency: { ...activeProposal.agency },
+      client: {
+        name: 'New Client',
+        role: 'Marketing Director',
+        company: '',
+        email: '',
+        phone: '+1 555 000 0000'
+      },
+      theme: { ...activeProposal.theme },
+      pages: duplicatedPages
     };
 
     ctxCreateProposal(duplicated);
-    showToast('Duplicated active proposal.');
-  }, [activeProposal, ctxCreateProposal, showToast]);
+    showToast('Created new proposal from template.');
+  }, [activeProposal, ctxCreateProposal, showToast, getDefaultPageData]);
 
   // Add new page to current proposal
   const handleAddPage = useCallback((type: PageType) => {
@@ -268,156 +516,6 @@ function AppContent() {
             { id: 'r1', category: 'Deliverable 1', details: '• High impact specification 1\n• Specification 2' },
             { id: 'r2', category: 'Strategy', details: 'Comprehensive approach and monitoring' }
           ]
-        }
-      };
-    } else if (type === 'smm-scope') {
-      newPage = {
-        id: `page-${Date.now()}`,
-        pageTitle: 'Social Media Management (Scope)',
-        type: 'smm-scope',
-        data: {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: `r1`,
-              category: 'Platforms',
-              details: 'Instagram, Facebook, Linkedin, Youtube',
-            },
-            {
-              id: `r2`,
-              category: 'Posts',
-              details: [
-                '25 posts per month (Instagram, Facebook)',
-                '10 posts per month (Linkedin)',
-                '15 Story per month',
-                '18 Reels, Remaining Static/Carousel',
-                'Grid planning',
-                'Aesthetic looks, Moodboard',
-              ],
-            },
-            {
-              id: `r3`,
-              category: 'Strategy',
-              details: [
-                'Hashtag research and social media strategy',
-                'Content and brand positioning planning',
-                'Monthly social media strategy',
-                'Posting and scheduling',
-                'ORM (Online Reputation Management)',
-              ],
-            },
-            {
-              id: `r4`,
-              category: 'Optimization',
-              details: 'Page optimization & periodic suggestions based on research',
-            },
-            {
-              id: `r5`,
-              category: 'Content',
-              details: [
-                'Monthly content calendar planning',
-                'Copywriting and caption writing',
-              ],
-            },
-            {
-              id: `r6`,
-              category: 'Designing',
-              details: 'Making visual creatives based on brand tonality (2 revisions per post on static creatives)',
-            },
-          ],
-        }
-      };
-    } else if (type === 'smm-operations') {
-      newPage = {
-        id: `page-${Date.now()}`,
-        pageTitle: 'Social Media Management (Operations)',
-        type: 'smm-operations',
-        data: {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: `r7`,
-              category: 'Scheduling & Publishing',
-              details: 'Optimal time posting on decided platforms',
-            },
-            {
-              id: `r8`,
-              category: 'Engagement',
-              details: 'Image/location tagging',
-            },
-            {
-              id: `r9`,
-              category: 'Monitoring',
-              details: 'Community management (comment and DM monitoring)',
-            },
-            {
-              id: `r10`,
-              category: 'Reporting',
-              details: 'Monthly performance report and insights',
-            },
-            {
-              id: `r11`,
-              category: 'Complimentary',
-              details: 'Festive stories',
-            },
-          ],
-        }
-      };
-    } else if (type === 'video-production') {
-      newPage = {
-        id: `page-${Date.now()}`,
-        pageTitle: 'Video Production',
-        type: 'video-production',
-        data: {
-          categoryTitle: 'CATEGORY',
-          detailsTitle: 'DETAILS',
-          rows: [
-            {
-              id: `v1`,
-              category: 'Video shoot',
-              details: [
-                '3 video shoot monthly',
-                '2 Podcasts / 1 on-site shoot',
-                'Professional camera setup',
-                'Lighting setup',
-                'Videographer | Photographer + 1 assistant',
-                'Complete shoot coordination',
-                'Topic suggestions will be provided by our team',
-              ],
-            },
-            {
-              id: `v2`,
-              category: 'Duration of videos',
-              details: '30 secs – 90 secs',
-            },
-            {
-              id: `v3`,
-              category: 'Editing',
-              details: 'Editing, colour grade, text overlays and background music',
-            },
-            {
-              id: `v4`,
-              category: 'Strategy',
-              details: 'Shoot planning & shot list preparation before each session',
-            },
-            {
-              id: `v5`,
-              category: 'Video Concept',
-              details: 'The video concept will be planned by our team.',
-            },
-            {
-              id: `v6`,
-              category: 'Shot list & prop checklist',
-              details: 'Prop requirement checklist will be shared in advance, client need to arrange',
-            },
-            {
-              id: `v7`,
-              category: 'Video Reference',
-              details: 'Reference Videos per concept will be shared by us for client alignment before shoot',
-            },
-          ],
         }
       };
     } else if (type === 'pricing-highlight') {

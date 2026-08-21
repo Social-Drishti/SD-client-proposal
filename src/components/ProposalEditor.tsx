@@ -34,7 +34,6 @@ export const ProposalEditor: React.FC<ProposalEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'content' | 'pages' | 'branding' | 'design'>('content');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
   const activePage: ProposalPage | undefined = proposal.pages[activePageIndex] || proposal.pages[0];
 
@@ -503,10 +502,9 @@ data: {
                         const currentRows = activePage.data?.rows || [];
                         const newRow: CategoryTableRow = {
                           id: `r-${Date.now()}`,
-                          category: '',
-                          details: ''
+                          category: 'New Category',
+                          details: 'â€¢ Item description\nâ€¢ Details line 2'
                         };
-                        setEditingRowId(newRow.id);
                         updateActivePage({
                           ...activePage,
                           data: {
@@ -523,130 +521,60 @@ data: {
                   </div>
 
                   <div className="space-y-3">
-                    {activePage.data?.rows.map((row, rIdx) => {
-                      const isEditing = editingRowId === row.id;
-
-                      if (isEditing) {
-                        return (
-                          <div
-                            key={row.id}
-                            className="p-3 bg-slate-100 border border-teal-500 rounded-xl space-y-2"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <input
-                                type="text"
-                                value={row.category || ''}
-                                onChange={(e) => {
-                                  const updatedRows = [...activePage.data!.rows];
-                                  updatedRows[rIdx].category = e.target.value;
-                                  updateActivePage({
-                                    ...activePage,
-                                    data: { ...activePage.data!, rows: updatedRows }
-                                  });
-                                  setEditingRowId(null);
-                                }}
-                                className="bg-white border border-teal-500 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus-outline-none focus:border-teal-500"
-                                placeholder="Category Name"
-                              />
-
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingRowId(null)}
-                                  className="py-1 px-2 rounded text-sm text-teal-600 hover:bg-teal-100 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updatedRows = [...activePage.data!.rows];
-                                    updateActivePage({
-                                      ...activePage,
-                                      data: { ...activePage.data!, rows: updatedRows }
-                                    });
-                                    setEditingRowId(null);
-                                  }}
-                                  className="py-1 px-2 rounded text-sm text-green-600 hover:bg-green-100 transition-colors"
-                                >
-                                  Save
-                                </button>
-                              </div>
-                            </div>
-
-                            <textarea
-                              rows={3}
-                              placeholder="Details (Use bullet points starting with • or newlines)"
-                              value={row.details || ''}
-                              onChange={(e) => {
-                                const updatedRows = [...activePage.data!.rows];
-                                updatedRows[rIdx].details = e.target.value;
-                                updateActivePage({
-                                  ...activePage,
-                                  data: { ...activePage.data!, rows: updatedRows }
-                                });
-                              }}
-                              className="w-full bg-white border border-teal-500 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-teal-500"
-                            />
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div
-                          key={row.id}
-                          className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <input
-                              type="text"
-                              placeholder="Category Name"
-                              value={row.category}
-                              onChange={(e) => {
-                                const updatedRows = [...activePage.data!.rows];
-                                updatedRows[rIdx].category = e.target.value;
-                                updateActivePage({
-                                  ...activePage,
-                                  data: { ...activePage.data!, rows: updatedRows }
-                                });
-                              }}
-                              className="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updatedRows = activePage.data!.rows.filter(
-                                  (_, idx) => idx !== rIdx
-                                );
-                                updateActivePage({
-                                  ...activePage,
-                                  data: { ...activePage.data!, rows: updatedRows }
-                                });
-                              }}
-                              className="text-slate-400 hover:text-red-500 p-1"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          <textarea
-                            rows={3}
-                            placeholder="Details (Use bullet points starting with • or newlines)"
-                            value={row.details}
+                    {activePage.data?.rows.map((row, rIdx) => (
+                      <div
+                        key={row.id}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Category Name"
+                            value={row.category}
                             onChange={(e) => {
                               const updatedRows = [...activePage.data!.rows];
-                              updatedRows[rIdx].details = e.target.value;
+                              updatedRows[rIdx].category = e.target.value;
                               updateActivePage({
                                 ...activePage,
                                 data: { ...activePage.data!, rows: updatedRows }
                               });
                             }}
-                            className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                            className="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs font-bold text-slate-900 flex-1 focus:outline-none focus:border-black"
                           />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedRows = activePage.data!.rows.filter(
+                                (_, idx) => idx !== rIdx
+                              );
+                              updateActivePage({
+                                ...activePage,
+                                data: { ...activePage.data!, rows: updatedRows }
+                              });
+                            }}
+                            className="text-slate-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      );
-                    })}
+
+                        <textarea
+                          rows={3}
+                          placeholder="Details (Use bullet points starting with â€¢ or newlines)"
+                          value={row.details}
+                          onChange={(e) => {
+                            const updatedRows = [...activePage.data!.rows];
+                            updatedRows[rIdx].details = e.target.value;
+                            updateActivePage({
+                              ...activePage,
+                              data: { ...activePage.data!, rows: updatedRows }
+                            });
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-800 focus:outline-none focus:border-black"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
 

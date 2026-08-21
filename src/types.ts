@@ -13,10 +13,7 @@ export type PageType =
   | 'milestones'
   | 'terms-signature'
   | 'freeform'
-  | 'combined-table-pricing'
-  | 'smm-scope'
-  | 'smm-operations'
-  | 'video-production';
+  | 'combined-table-pricing';
 
 export interface CategoryTableRow {
   id: string;
