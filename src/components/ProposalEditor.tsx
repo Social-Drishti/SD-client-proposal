@@ -689,7 +689,7 @@ data: {
                         }
                       })
                     }
-                    placeholder="Monthly â€“ $2,500 + Taxes"
+                    placeholder="Monthly ₹2,500 + Taxes"
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-900 focus:bg-white focus:border-black focus:outline-none"
                   />
                 </div>
@@ -984,7 +984,7 @@ data: {
                         }
                       })
                     }
-                    placeholder="Monthly â€“ $2,500 + Taxes"
+                    placeholder="Monthly ₹2,500 + Taxes"
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-900 focus:bg-white focus:border-black focus:outline-none"
                   />
                 </div>
